@@ -1,7 +1,8 @@
-import { Anchor, Drawer, Stack, Text, Title } from '@mantine/core'
+import { Anchor, Drawer, Stack, Text } from '@mantine/core'
 import { useState } from 'react'
 
 import type { Fund } from '../../api/types.ts'
+import { CommitForm } from './CommitForm.tsx'
 import { FundPicker } from './FundPicker.tsx'
 
 interface CommitDrawerProps {
@@ -9,10 +10,7 @@ interface CommitDrawerProps {
   onClose: () => void
 }
 
-/**
- * Commit capital to an open fund, in two steps: pick a fund, then enter an
- * amount. The amount form arrives in step 9.
- */
+/** Commit capital to an open fund, in two steps: pick a fund, then enter an amount. */
 export function CommitDrawer({ opened, onClose }: CommitDrawerProps) {
   const [fund, setFund] = useState<Fund | null>(null)
   // Remembered so "Change fund" highlights where you were.
@@ -35,16 +33,12 @@ export function CommitDrawer({ opened, onClose }: CommitDrawerProps) {
       }}
     >
       {fund ? (
-        <Stack gap="xs">
+        <Stack gap="md">
           <Anchor component="button" type="button" size="sm" c="dimmed" onClick={() => setFund(null)} w="fit-content">
             ← Change fund
           </Anchor>
-          <Title order={3} size="h4">
-            {fund.name}
-          </Title>
-          <Text size="sm" c="dimmed">
-            {fund.strategy} · {fund.manager}
-          </Text>
+          {/* Keyed by fund so switching funds starts a fresh form. */}
+          <CommitForm key={fund.id} fund={fund} onDone={onClose} onChangeFund={() => setFund(null)} onCancel={onClose} />
         </Stack>
       ) : (
         <Stack gap="sm">

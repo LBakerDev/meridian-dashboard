@@ -144,7 +144,7 @@ function FundOption({ fund, holding, selected, onSelect }: FundOptionProps) {
 }
 
 /** Close date, with a warning when it's near, today, or already passed. */
-function CloseLabel({ fund }: { fund: Fund }) {
+export function CloseLabel({ fund }: { fund: Fund }) {
   const { status, daysLeft } = closeInfo(fund)
 
   if (status === 'passed') {

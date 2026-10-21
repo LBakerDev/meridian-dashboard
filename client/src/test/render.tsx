@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement, ReactNode } from 'react'
@@ -17,6 +18,7 @@ export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?:
   function Providers({ children }: { children: ReactNode }) {
     return (
       <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} forceColorScheme="light">
+        <Notifications />
         <QueryWrapper>
           <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
         </QueryWrapper>

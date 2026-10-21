@@ -1,9 +1,11 @@
 import '@testing-library/jest-dom/vitest'
+import { notifications } from '@mantine/notifications'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 
 afterEach(() => {
   cleanup()
+  notifications.clean() // the toast store is global; don't let one test's toasts leak into the next
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
