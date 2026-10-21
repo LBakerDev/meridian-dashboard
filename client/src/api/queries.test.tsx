@@ -124,6 +124,8 @@ describe('useCommitToFund', () => {
       '/api/funds/fund_northwind_iv/commitments',
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ amount: 300_000, acknowledgedTerms: true }) }),
     )
+    // The hook re-renders with its result in a batch just after the mutation resolves.
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(created)
   })
 
@@ -150,14 +152,21 @@ describe('useCommitToFund', () => {
       }
       return jsonResponse(404, { error: 'Unknown API route.' })
     })
-    const { wrapper } = createQueryWrapper()
+    const { queryClient, wrapper } = createQueryWrapper()
     const { result } = renderHook(() => ({ summary: useSummary(), commit: useCommitToFund() }), { wrapper })
     await waitFor(() => expect(result.current.summary.data?.totalCommitted).toBe(39_500_000))
 
-    await act(() => result.current.commit.mutateAsync(variables))
+    let cachedAtResolve: number | undefined
+    await act(async () => {
+      await result.current.commit.mutateAsync(variables)
+      cachedAtResolve = queryClient.getQueryData<{ totalCommitted: number }>(['summary'])?.totalCommitted
+    })
 
-    // Already updated the moment the mutation resolves; no extra wait needed.
-    expect(result.current.summary.data?.totalCommitted).toBe(39_800_000)
+    // The refetched summary is already in the cache the moment the commit resolves,
+    // so whatever renders next (e.g. the form closing) shows the new total.
+    expect(cachedAtResolve).toBe(39_800_000)
+    expect(summaryRequests).toBe(2)
+    await waitFor(() => expect(result.current.summary.data?.totalCommitted).toBe(39_800_000))
   })
 
   it('exposes field errors on a 400 and leaves the funds list alone', async () => {
@@ -175,6 +184,7 @@ describe('useCommitToFund', () => {
       await result.current.mutateAsync({ ...variables, amount: 1_000 }).catch(() => {})
     })
 
+    await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toMatchObject({
       status: 400,
       fields: { amount: 'Minimum commitment for this fund is $250,000.' },
@@ -192,6 +202,7 @@ describe('useCommitToFund', () => {
       await result.current.mutateAsync(variables).catch(() => {})
     })
 
+    await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toMatchObject({ status: 409 })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['funds'] })
   })
