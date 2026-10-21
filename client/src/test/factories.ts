@@ -1,4 +1,4 @@
-import type { Commitment, Fund } from '../api/types.ts'
+import type { Commitment, Fund, Paginated, PortfolioSummary } from '../api/types.ts'
 
 /** Test data builders. Defaults are taken from the seed data; override only what a test cares about. */
 
@@ -20,6 +20,26 @@ export function makeCommitment(overrides: Partial<Commitment> = {}): Commitment 
     netDpi: 0.37,
     ...overrides,
   }
+}
+
+export function makeSummary(overrides: Partial<PortfolioSummary> = {}): PortfolioSummary {
+  return {
+    totalCommitted: 39_500_000,
+    totalCalled: 25_025_000,
+    totalDistributed: 8_400_000,
+    totalNav: 24_310_519.4,
+    unfundedCommitment: 14_475_000,
+    netMoic: 1.31,
+    netDpi: 0.34,
+    activeCommitments: 18,
+    currency: 'USD',
+    ...overrides,
+  }
+}
+
+/** Wraps rows in the API's collection envelope. */
+export function makePage<T>(data: T[]): Paginated<T> {
+  return { data, meta: { page: 1, pageSize: 100, total: data.length, totalPages: 1 } }
 }
 
 export function makeFund(overrides: Partial<Fund> = {}): Fund {
