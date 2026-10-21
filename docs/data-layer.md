@@ -47,8 +47,8 @@ loading flags.
 
 ### 3. Data is reused for 30 seconds before it's refetched
 
-`staleTime: 30_000` (in `lib/queryClient.ts`). Switching between Portfolio and
-Open funds shows cached data instantly instead of waiting 350 ms again. Coming
+`staleTime: 30_000` (in `lib/queryClient.ts`). Opening the commit drawer shows
+the fund list instantly (the table already fetched it) instead of waiting 350 ms again. Coming
 back to the browser tab after a while refreshes it quietly in the background.
 
 ### 4. Re-sorting doesn't flash a skeleton

@@ -40,24 +40,6 @@
   }
 }
 
-.navLink {
-  display: inline-flex;
-  align-items: center;
-  padding: rem(6px) rem(12px);
-  border-radius: var(--mantine-radius-sm);
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 500;
-  color: var(--mantine-color-dimmed);
-  text-decoration: none;
-}
-
-.navLink:hover,
-.navLink[aria-current='page'] {
-  color: var(--mantine-color-text);
-  background-color: var(--mantine-color-gray-1);
-}
-
-.navLink:focus-visible,
 .brand:focus-visible {
   outline: 2px solid var(--mantine-primary-color-filled);
   outline-offset: 2px;

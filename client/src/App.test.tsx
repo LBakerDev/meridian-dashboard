@@ -10,40 +10,25 @@ beforeEach(() => {
   routeFetch(() => new Promise<Response>(() => {}))
 })
 
-function navLink(name: string) {
-  return screen.getByRole('link', { name })
-}
-
 describe('App shell and routing', () => {
-  it('shows the portfolio at / and marks it as the current page', () => {
+  it('shows the portfolio at /', () => {
     renderWithProviders(<App />, { route: '/' })
 
     expect(screen.getByRole('heading', { level: 1, name: 'Portfolio' })).toBeInTheDocument()
-    expect(navLink('Portfolio')).toHaveAttribute('aria-current', 'page')
-    expect(navLink('Open funds')).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('link', { name: 'Meridian' })).toHaveAttribute('href', '/')
     expect(document.title).toBe('Portfolio · Meridian')
   })
 
-  it('shows open funds at /funds and marks that link instead', () => {
-    renderWithProviders(<App />, { route: '/funds' })
-
-    expect(screen.getByRole('heading', { level: 1, name: 'Open funds' })).toBeInTheDocument()
-    expect(navLink('Open funds')).toHaveAttribute('aria-current', 'page')
-    expect(navLink('Portfolio')).not.toHaveAttribute('aria-current')
-  })
-
-  it('navigates between sections from the header', async () => {
+  it('opens the commit drawer from the portfolio', async () => {
     const { user } = renderWithProviders(<App />, { route: '/' })
 
-    await user.click(navLink('Open funds'))
+    await user.click(screen.getByRole('button', { name: 'Commit capital' }))
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Open funds' })).toBeInTheDocument()
-    expect(navLink('Open funds')).toHaveAttribute('aria-current', 'page')
-    expect(document.title).toBe('Open funds · Meridian')
+    expect(await screen.findByRole('dialog', { name: 'Commit capital' })).toBeInTheDocument()
   })
 
   it('shows a not-found page with a way back for unknown addresses', async () => {
-    const { user } = renderWithProviders(<App />, { route: '/nope' })
+    const { user } = renderWithProviders(<App />, { route: '/funds' })
 
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument()
 

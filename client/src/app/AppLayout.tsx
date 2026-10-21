@@ -1,15 +1,10 @@
 import { AppShell, Container, Group } from '@mantine/core'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, Outlet } from 'react-router'
 
 import classes from './AppLayout.module.css'
 
-// Two sections, so the nav lives in the header. AppShell makes moving it to a
-// sidebar a small change if the product grows past four or five sections.
-const NAV_ITEMS = [
-  { to: '/', label: 'Portfolio', end: true },
-  { to: '/funds', label: 'Open funds', end: false },
-]
-
+// One page for now, so the header is just the brand. If sections are added,
+// AppShell makes a header nav or sidebar a small change.
 export function AppLayout() {
   return (
     <AppShell header={{ height: 60 }} padding="xl">
@@ -19,20 +14,10 @@ export function AppLayout() {
 
       <AppShell.Header className={classes.header}>
         <Container size="lg" h="100%">
-          <Group h="100%" justify="space-between" wrap="nowrap">
+          <Group h="100%" wrap="nowrap">
             <Link to="/" className={classes.brand}>
               Meridian
             </Link>
-            <nav aria-label="Main">
-              <Group gap={4} wrap="nowrap">
-                {NAV_ITEMS.map((item) => (
-                  // NavLink sets aria-current="page" on the active link; the CSS styles that.
-                  <NavLink key={item.to} to={item.to} end={item.end} className={classes.navLink}>
-                    {item.label}
-                  </NavLink>
-                ))}
-              </Group>
-            </nav>
           </Group>
         </Container>
       </AppShell.Header>
