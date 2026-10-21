@@ -1,0 +1,72 @@
+.searchBar {
+  padding-bottom: rem(12px);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: rem(12px);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.option:hover,
+.option[data-selected] {
+  background-color: var(--mantine-color-gray-1);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.terms {
+  color: var(--mantine-color-dimmed);
+}
+
+.figure {
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+.holding {
+  color: var(--meridian-brand);
+}
+
+.holding .figure {
+  color: inherit;
+}
+
+.closeBadge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.warning {
+  color: var(--meridian-pending);
+  border: 1px solid color-mix(in srgb, var(--meridian-pending) 35%, transparent);
+  background-color: color-mix(in srgb, var(--meridian-pending) 6%, transparent);
+}
+
+.skeletonRow {
+  padding: rem(12px);
+}
+
+.skeletonRow + .skeletonRow {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.empty {
+  padding: rem(32px) rem(16px);
+  text-align: center;
+}
