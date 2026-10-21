@@ -1,0 +1,36 @@
+.list {
+  margin: 0;
+}
+
+.detail {
+  margin: 0;
+}
+
+.value {
+  display: block;
+  margin-top: rem(2px);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(22px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.context {
+  display: block;
+  margin-top: rem(2px);
+}
+
+.figure {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+.figure[data-tone='gain'] {
+  color: var(--meridian-gain);
+}
+
+.figure[data-tone='loss'] {
+  color: var(--meridian-loss);
+}

@@ -1,8 +1,14 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import App from './App.tsx'
+import { routeFetch } from './test/http.ts'
 import { renderWithProviders } from './test/render.tsx'
+
+// These tests cover the shell and routing, not data: leave every request pending.
+beforeEach(() => {
+  routeFetch(() => new Promise<Response>(() => {}))
+})
 
 function navLink(name: string) {
   return screen.getByRole('link', { name })
