@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import './App.css'
 
 /**
  * Starting point for the Meridian front-end take-home.
