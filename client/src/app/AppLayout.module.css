@@ -1,0 +1,86 @@
+.header {
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(8px);
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mantine-color-text);
+  text-decoration: none;
+}
+
+/* Status dot: a slow pulse, off for people who prefer reduced motion. */
+.brand::before {
+  content: '';
+  width: rem(8px);
+  height: rem(8px);
+  border-radius: 50%;
+  background-color: var(--meridian-gain);
+  animation: pulse 2.4s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--meridian-gain) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 rem(7px) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand::before {
+    animation: none;
+  }
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  padding: rem(6px) rem(12px);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+  text-decoration: none;
+}
+
+.navLink:hover,
+.navLink[aria-current='page'] {
+  color: var(--mantine-color-text);
+  background-color: var(--mantine-color-gray-1);
+}
+
+.navLink:focus-visible,
+.brand:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* Hidden until focused, so keyboard users can jump past the header. */
+.skipLink {
+  position: fixed;
+  top: rem(-48px);
+  left: rem(16px);
+  z-index: 1000;
+  padding: rem(8px) rem(12px);
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-white);
+  font-size: var(--mantine-font-size-sm);
+  text-decoration: none;
+}
+
+.skipLink:focus {
+  top: rem(12px);
+}
+
+.main:focus {
+  outline: none;
+}
