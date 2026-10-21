@@ -30,11 +30,18 @@ const gray: MantineColorsTuple = [
   '#b9b6ad', '#9a9890', '#6b6b6b', '#4a4945', '#2b2b2b',
 ]
 
+// Brand accent: the main call to action and neutral "your capital" figures.
+// Shade 7 is the brand color; Mantine uses shade 8 for its hover state.
+const brand: MantineColorsTuple = [
+  '#eef1f9', '#dce2f1', '#b7c2e2', '#91a1d2', '#6f84c3',
+  '#5a70b8', '#4a5fa6', '#3a4e8c', '#2f4073', '#23305a',
+]
+
 const sans = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'
 const mono = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
 
 export const theme = createTheme({
-  colors: { ink, gray },
+  colors: { ink, gray, brand },
   primaryColor: 'ink',
   primaryShade: 9,
   black: '#111111',
@@ -75,7 +82,7 @@ export const theme = createTheme({
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
-    '--meridian-brand': '#3a4e8c',
+    '--meridian-brand': 'var(--mantine-color-brand-7)',
     '--meridian-gain': '#0f8a4f',
     '--meridian-loss': '#c0392b',
     '--meridian-pending': '#a8650f',

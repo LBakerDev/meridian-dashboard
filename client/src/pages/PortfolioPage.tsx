@@ -16,7 +16,10 @@ export function PortfolioPage() {
         <Title order={1} size="h2">
           Portfolio
         </Title>
-        <Button onClick={commitDrawer.open}>Commit capital</Button>
+        {/* The page's one primary action, so it's the one button in the brand color. */}
+        <Button color="brand.7" size="md" leftSection={<span aria-hidden="true">+</span>} onClick={commitDrawer.open}>
+          Commit capital
+        </Button>
       </Group>
       <Stack gap="xs">
         <SummaryCards />
