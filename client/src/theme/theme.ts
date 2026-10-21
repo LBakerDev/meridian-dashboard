@@ -71,9 +71,11 @@ export const theme = createTheme({
 /**
  * Page-level colors and our own semantic tokens. Gain/loss/pending are exposed
  * as CSS variables so CSS Modules can use them, e.g. `color: var(--meridian-loss)`.
+ * Brand is a neutral accent for figures that are neither good nor bad (capital called).
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
+    '--meridian-brand': '#3a4e8c',
     '--meridian-gain': '#0f8a4f',
     '--meridian-loss': '#c0392b',
     '--meridian-pending': '#a8650f',

@@ -1,11 +1,15 @@
-import { Alert, Button, Card, SimpleGrid, Skeleton, Text } from '@mantine/core'
+import { Alert, Box, Button, Card, Group, Progress, SimpleGrid, Skeleton, Text } from '@mantine/core'
 import type { ReactNode } from 'react'
 
 import { useSummary } from '../../api/queries.ts'
 import { formatMoney, formatMoneyCompact, formatMultiple } from '../../domain/format.ts'
 import classes from './SummaryCards.module.css'
 
-/** The four headline numbers from GET /portfolio/summary. */
+/**
+ * The portfolio's focus area. Leads with total value (NAV + distributions):
+ * what the investor's money is worth now, counting cash already returned,
+ * which is also what net MOIC is measured against.
+ */
 export function SummaryCards() {
   const { data: summary, isPending, isError, refetch, isRefetching } = useSummary()
 
@@ -24,54 +28,102 @@ export function SummaryCards() {
 
   if (isPending) {
     return (
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" aria-busy="true" aria-label="Loading portfolio summary">
-        {[0, 1, 2, 3].map((i) => (
-          <Card key={i} padding="md">
-            <Skeleton height={10} width="45%" />
-            <Skeleton height={22} width="70%" mt={6} />
-            <Skeleton height={10} width="60%" mt={6} />
-          </Card>
-        ))}
-      </SimpleGrid>
+      <Card padding="xl" aria-busy="true" aria-label="Loading portfolio summary">
+        <div className={classes.layout}>
+          <div>
+            <Skeleton height={12} width={90} />
+            <Skeleton height={44} width={220} mt="sm" />
+            <Skeleton height={14} width={260} mt="sm" />
+          </div>
+          <SimpleGrid cols={2} spacing="lg">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i}>
+                <Skeleton height={10} width="50%" />
+                <Skeleton height={20} width="70%" mt={8} />
+              </div>
+            ))}
+          </SimpleGrid>
+        </div>
+        <Skeleton height={8} mt="xl" />
+      </Card>
     )
   }
 
+  const totalValue = summary.totalNav + summary.totalDistributed
+  const gain = totalValue - summary.totalCalled
   const calledPct = summary.totalCommitted > 0 ? (summary.totalCalled / summary.totalCommitted) * 100 : 0
+  const unfundedPct = 100 - calledPct
 
   return (
-    <SimpleGrid component="dl" cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" className={classes.list}>
-      <Stat label="Net asset value" value={summary.totalNav}>
-        <span className={classes.figure} data-tone={summary.netMoic >= 1 ? 'gain' : 'loss'}>
-          {formatMultiple(summary.netMoic)}
-        </span>{' '}
-        net MOIC
-      </Stat>
+    <Card padding="xl" component="section" aria-label="Portfolio summary">
+      <div className={classes.layout}>
+        <div>
+          <Text size="sm" c="dimmed">
+            Total value
+          </Text>
+          <div className={classes.hero} title={formatMoney(totalValue)}>
+            {formatMoneyCompact(totalValue)}
+          </div>
+          <Text size="sm" c="dimmed" mt={6}>
+            <span className={classes.figure} data-tone={gain >= 0 ? 'gain' : 'loss'}>
+              {formatSigned(gain)}
+            </span>{' '}
+            on <span className={classes.figure}>{formatMoneyCompact(summary.totalCalled)}</span> called ·{' '}
+            <span className={classes.figure} data-tone={summary.netMoic >= 1 ? 'gain' : 'loss'}>
+              {formatMultiple(summary.netMoic)}
+            </span>{' '}
+            net MOIC
+          </Text>
+        </div>
 
-      <Stat label="Committed" value={summary.totalCommitted}>
-        {summary.activeCommitments} active commitments
-      </Stat>
+        <SimpleGrid component="dl" cols={2} spacing="lg" verticalSpacing="md" className={classes.stats}>
+          <Stat label="Net asset value" value={summary.totalNav}>
+            current value of holdings
+          </Stat>
+          <Stat label="Distributed" value={summary.totalDistributed}>
+            <span className={classes.figure}>{formatMultiple(summary.netDpi)}</span> DPI
+          </Stat>
+          <Stat label="Committed" value={summary.totalCommitted}>
+            {summary.activeCommitments} active commitments
+          </Stat>
+          <Stat label="Unfunded" value={summary.unfundedCommitment}>
+            {Math.round(unfundedPct)}% left to be called
+          </Stat>
+        </SimpleGrid>
+      </div>
 
-      <Stat label="Called" value={summary.totalCalled}>
-        {Math.round(calledPct)}% of committed · <span className={classes.figure}>{formatMoneyCompact(summary.unfundedCommitment)}</span> unfunded
-      </Stat>
-
-      <Stat label="Distributed" value={summary.totalDistributed}>
-        <span className={classes.figure}>{formatMultiple(summary.netDpi)}</span> DPI
-      </Stat>
-    </SimpleGrid>
+      <Box mt="xl">
+        <Group justify="space-between" mb={8}>
+          <Text size="xs" c="dimmed">
+            Capital called
+          </Text>
+          <Text size="xs" c="dimmed">
+            <span className={classes.figure}>{Math.round(calledPct)}%</span> of{' '}
+            <span className={classes.figure}>{formatMoneyCompact(summary.totalCommitted)}</span> committed
+          </Text>
+        </Group>
+        <Progress.Root size={8}>
+          <Progress.Section value={calledPct} color="var(--meridian-brand)" aria-label="Called" />
+          <Progress.Section value={unfundedPct} color="gray.3" aria-label="Unfunded" />
+        </Progress.Root>
+        <Group gap="lg" mt={8}>
+          <Legend swatch="called" label="Called" value={summary.totalCalled} />
+          <Legend swatch="unfunded" label="Unfunded" value={summary.unfundedCommitment} />
+        </Group>
+      </Box>
+    </Card>
   )
 }
 
-interface StatProps {
-  label: string
-  value: number
-  children: ReactNode
+/** "+$7.7M" / "−$1.2M", with a true minus sign. */
+function formatSigned(amount: number): string {
+  const formatted = formatMoneyCompact(Math.abs(amount))
+  return amount < 0 ? `−${formatted}` : `+${formatted}`
 }
 
-/** One card: a term, its compact value (full amount on hover), and context underneath. */
-function Stat({ label, value, children }: StatProps) {
+function Stat({ label, value, children }: { label: string; value: number; children: ReactNode }) {
   return (
-    <Card padding="md">
+    <div>
       <Text component="dt" size="xs" c="dimmed">
         {label}
       </Text>
@@ -83,6 +135,17 @@ function Stat({ label, value, children }: StatProps) {
           {children}
         </Text>
       </dd>
-    </Card>
+    </div>
+  )
+}
+
+function Legend({ swatch, label, value }: { swatch: 'called' | 'unfunded'; label: string; value: number }) {
+  return (
+    <Group gap={6}>
+      <span className={classes.swatch} data-swatch={swatch} aria-hidden="true" />
+      <Text size="xs" c="dimmed">
+        {label} <span className={classes.figure}>{formatMoneyCompact(value)}</span>
+      </Text>
+    </Group>
   )
 }
