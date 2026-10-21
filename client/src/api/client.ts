@@ -58,7 +58,8 @@ export async function request<T>(path: string, { method = 'GET', body, signal }:
     })
   } catch (error) {
     // Let cancellations through untouched so TanStack Query can ignore them.
-    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    // Checked by name: `instanceof DOMException` isn't reliable across environments.
+    if ((error as { name?: string } | null)?.name === 'AbortError') throw error
     throw new ApiError("Couldn't reach the server.", 0)
   }
 
