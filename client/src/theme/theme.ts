@@ -30,7 +30,7 @@ const gray: MantineColorsTuple = [
   '#b9b6ad', '#9a9890', '#6b6b6b', '#4a4945', '#2b2b2b',
 ]
 
-// Brand accent: the main call to action and neutral "your capital" figures.
+// Brand accent: the main call to action, plus small "you hold" notes.
 // Shade 7 is the brand color; Mantine uses shade 8 for its hover state.
 const brand: MantineColorsTuple = [
   '#eef1f9', '#dce2f1', '#b7c2e2', '#91a1d2', '#6f84c3',
@@ -78,7 +78,7 @@ export const theme = createTheme({
 /**
  * Page-level colors and our own semantic tokens. Gain/loss/pending are exposed
  * as CSS variables so CSS Modules can use them, e.g. `color: var(--meridian-loss)`.
- * Brand is a neutral accent for figures that are neither good nor bad (capital called).
+ * Brand is the accent for the main action; it carries no good/bad meaning.
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {

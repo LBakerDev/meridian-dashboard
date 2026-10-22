@@ -77,8 +77,9 @@
   border-radius: rem(2px);
 }
 
+/* Ink, like the figures: called capital is neutral, and the brand color is kept for the main action. */
 .swatch[data-swatch='called'] {
-  background-color: var(--meridian-brand);
+  background-color: var(--mantine-color-ink-9);
 }
 
 .swatch[data-swatch='unfunded'] {

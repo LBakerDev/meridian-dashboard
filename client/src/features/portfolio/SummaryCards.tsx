@@ -103,7 +103,7 @@ export function SummaryCards() {
           </Text>
         </Group>
         <Progress.Root size={8}>
-          <Progress.Section value={calledPct} color="var(--meridian-brand)" aria-label="Called" />
+          <Progress.Section value={calledPct} color="ink" aria-label="Called" />
           <Progress.Section value={unfundedPct} color="gray.3" aria-label="Unfunded" />
         </Progress.Root>
         <Group gap="lg" mt={8}>

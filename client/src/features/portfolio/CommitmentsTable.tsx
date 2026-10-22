@@ -261,16 +261,23 @@ interface SortableHeaderProps {
 
 function SortableHeader({ field, label, numeric, params, onSort }: SortableHeaderProps) {
   const active = params.sort === field
+  // The arrow's space is always reserved so labels don't shift when sorting. On
+  // right-aligned (numeric) columns it goes on the left, so the label's right
+  // edge lines up with the figures below.
+  const arrow = (
+    <span aria-hidden="true" className={classes.arrow}>
+      {active ? (params.order === 'asc' ? '↑' : '↓') : ''}
+    </span>
+  )
   return (
     <Table.Th
       className={numeric ? classes.numeric : undefined}
       aria-sort={active ? (params.order === 'asc' ? 'ascending' : 'descending') : undefined}
     >
       <UnstyledButton className={classes.sortButton} data-active={active || undefined} onClick={() => onSort(field)}>
+        {numeric && arrow}
         {label}
-        <span aria-hidden="true" className={classes.arrow}>
-          {active ? (params.order === 'asc' ? '↑' : '↓') : ''}
-        </span>
+        {!numeric && arrow}
       </UnstyledButton>
     </Table.Th>
   )

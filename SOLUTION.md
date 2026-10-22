@@ -126,8 +126,9 @@ went wrong I pasted the failure back rather than asking it to "fix tests".
   routing once it was clear the table's URL state needs a router.
 - **Green bar.** I asked for the capital-called bar to be green. It pushed
   back: green means gain here, and called capital is money paid in, not a
-  return. We settled on a neutral brand indigo, which I then also used for the
-  main call to action.
+  return. I tried brand indigo on both the bar and the main call to action,
+  didn't like the pairing, and landed on an ink bar (matching the figures) with
+  indigo kept for the one button that matters.
 - **Test failures it caused, and the fixes:**
   - **Aborts:** jsdom's `DOMException` isn't an `Error`, so the client now
     detects aborts by name.
