@@ -30,9 +30,31 @@
   font-size: var(--mantine-font-size-sm);
 }
 
+/* Column widths for the fixed table layout. Each fits its widest realistic value
+   plus the header's sort arrow; the fund column takes whatever is left. */
+.colDate {
+  width: rem(132px);
+}
+
+.colMoney {
+  width: rem(112px);
+}
+
+.colCalled {
+  width: rem(144px);
+}
+
+.colRatio {
+  width: rem(104px);
+}
+
+.colStatus {
+  width: rem(140px);
+}
+
 /* Long names (one is 80 characters) truncate with the full name on hover. */
 .fundCell {
-  max-width: rem(320px);
+  overflow: hidden;
 }
 
 .share {

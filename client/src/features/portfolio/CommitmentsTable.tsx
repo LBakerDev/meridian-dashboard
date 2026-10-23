@@ -135,8 +135,21 @@ export function CommitmentsTable() {
           </Button>
         </Alert>
       ) : (
-        <Table.ScrollContainer minWidth={820}>
-          <Table className={classes.table}>
+        <Table.ScrollContainer minWidth={1000}>
+          {/* Fixed layout: column widths come from the colgroup, not from whichever
+              rows are on screen, so sorting or paging never shifts the columns.
+              The first (fund) column has no width: it takes the remaining space. */}
+          <Table className={classes.table} layout="fixed">
+            <colgroup>
+              <col />
+              <col className={classes.colDate} />
+              <col className={classes.colMoney} />
+              <col className={classes.colCalled} />
+              <col className={classes.colMoney} />
+              <col className={classes.colRatio} />
+              <col className={classes.colRatio} />
+              <col className={classes.colStatus} />
+            </colgroup>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Fund</Table.Th>
