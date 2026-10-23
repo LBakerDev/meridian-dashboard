@@ -2,7 +2,9 @@ import { Alert, Box, Button, Card, Group, Progress, SimpleGrid, Skeleton, Text }
 import type { ReactNode } from 'react'
 
 import { useSummary } from '../../api/queries.ts'
+import type { PortfolioSummary } from '../../api/types.ts'
 import { formatMoney, formatMoneyCompact, formatMultiple } from '../../domain/format.ts'
+import { useCountUp } from '../../hooks/useCountUp.ts'
 import classes from './SummaryCards.module.css'
 
 /**
@@ -49,10 +51,25 @@ export function SummaryCards() {
     )
   }
 
+  return <SummaryPanel summary={summary} />
+}
+
+/**
+ * The loaded panel. Headline figures count up on first load and tick to their
+ * new values when the summary refreshes (after a commit, Committed and Unfunded
+ * move by the amount just committed). Exact values (in `title`) are always final.
+ */
+function SummaryPanel({ summary }: { summary: PortfolioSummary }) {
   const totalValue = summary.totalNav + summary.totalDistributed
   const gain = totalValue - summary.totalCalled
   const calledPct = summary.totalCommitted > 0 ? (summary.totalCalled / summary.totalCommitted) * 100 : 0
   const unfundedPct = 100 - calledPct
+
+  // Only figures on a line of their own count. Numbers inside a sentence (the
+  // gain line, the legend) would change width as they count and shove the words
+  // after them around, so those show their final value straight away.
+  const shownTotal = useCountUp(totalValue)
+  const shownCalledPct = useCountUp(calledPct)
 
   return (
     <Card padding="xl" component="section" aria-label="Portfolio summary">
@@ -62,7 +79,7 @@ export function SummaryCards() {
             Total value
           </Text>
           <div className={classes.hero} title={formatMoney(totalValue)}>
-            {formatMoneyCompact(totalValue)}
+            {formatMoneyCompact(shownTotal)}
           </div>
           <Text size="sm" c="dimmed" mt={6}>
             <span className={classes.figure} data-tone={gain >= 0 ? 'gain' : 'loss'}>
@@ -102,9 +119,10 @@ export function SummaryCards() {
             <span className={classes.figure}>{formatMoneyCompact(summary.totalCommitted)}</span> committed
           </Text>
         </Group>
-        <Progress.Root size={8}>
-          <Progress.Section value={calledPct} color="ink" aria-label="Called" />
-          <Progress.Section value={unfundedPct} color="gray.3" aria-label="Unfunded" />
+        {/* The count-up drives the width frame by frame, so turn off Progress's own easing. */}
+        <Progress.Root size={8} transitionDuration={0}>
+          <Progress.Section value={shownCalledPct} color="ink" aria-label="Called" />
+          <Progress.Section value={100 - shownCalledPct} color="gray.3" aria-label="Unfunded" />
         </Progress.Root>
         <Group gap="lg" mt={8}>
           <Legend swatch="called" label="Called" value={summary.totalCalled} />
@@ -122,6 +140,7 @@ function formatSigned(amount: number): string {
 }
 
 function Stat({ label, value, children }: { label: string; value: number; children: ReactNode }) {
+  const shown = useCountUp(value)
   return (
     <div>
       <Text component="dt" size="xs" c="dimmed">
@@ -129,7 +148,7 @@ function Stat({ label, value, children }: { label: string; value: number; childr
       </Text>
       <dd className={classes.detail}>
         <span className={classes.value} title={formatMoney(value)}>
-          {formatMoneyCompact(value)}
+          {formatMoneyCompact(shown)}
         </span>
         <Text component="span" size="xs" c="dimmed" className={classes.context}>
           {children}
