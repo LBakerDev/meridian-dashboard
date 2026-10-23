@@ -18,7 +18,7 @@ import { useSearchParams } from 'react-router'
 
 import { useCommitments, useFunds } from '../../api/queries.ts'
 import type { Commitment, CommitmentSortField, CommitmentStatus, Currency } from '../../api/types.ts'
-import { calledFraction, isValued } from '../../domain/commitments.ts'
+import { calledFraction, isValued, orderByDateCommitted } from '../../domain/commitments.ts'
 import { formatDate, formatMoney, formatMoneyCompact, formatMultiple, formatPercent } from '../../domain/format.ts'
 import { currencyOf, indexFunds } from '../../domain/funds.ts'
 import classes from './CommitmentsTable.module.css'
@@ -93,7 +93,10 @@ export function CommitmentsTable() {
       </Table.Tr>
     )
   } else if (commitments.data) {
-    body = commitments.data.data.map((commitment) => (
+    // The API leaves same-day commitments in creation order; put the latest first when newest-first.
+    const rows =
+      params.sort === 'dateCommitted' ? orderByDateCommitted(commitments.data.data, params.order) : commitments.data.data
+    body = rows.map((commitment) => (
       <CommitmentRow key={commitment.id} commitment={commitment} currency={currencyOf(commitment, fundsById)} />
     ))
   }

@@ -94,6 +94,22 @@ describe('CommitmentsTable', () => {
     expect(commitmentRequests(fetchMock)).toEqual(['/api/commitments?pageSize=10&page=1&sort=dateCommitted&order=desc'])
   })
 
+  it("shows today's latest commitment first, even though the API returns same-day ones oldest first", async () => {
+    const first = makeCommitment({ id: 'cm_0021', fundName: 'First Today Fund', manager: 'A', dateCommitted: '2026-10-22' })
+    const second = makeCommitment({ id: 'cm_0022', fundName: 'Second Today Fund', manager: 'B', dateCommitted: '2026-10-22' })
+    serve({ commitments: [first, second, silverpeak] })
+    renderWithProviders(<CommitmentsTable />)
+
+    await screen.findByRole('row', { name: /Second Today Fund/ })
+    const [, ...rows] = screen.getAllByRole('row') // skip the header
+    // The first titled element in each row is the fund name.
+    expect(rows.map((row) => row.querySelector('[title]')?.textContent)).toEqual([
+      'Second Today Fund',
+      'First Today Fund',
+      'Silverpeak Growth Equity V',
+    ])
+  })
+
   it('shows "not yet valued" for pending commitments, even when the API sends zeros', async () => {
     serve()
     renderWithProviders(<CommitmentsTable />)
