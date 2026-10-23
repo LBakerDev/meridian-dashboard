@@ -18,6 +18,9 @@ One page: the portfolio, with committing capital in a drawer on top of it.
   what the money is worth now and what MOIC is measured against. Next to it:
   "+$7.69M on $25.03M called · 1.31× net MOIC", then NAV, distributed (with DPI),
   committed and unfunded, and a bar showing how much of the commitment has been called.
+  Figures count up on load and tick to their new values after a commit, so
+  you see your amount land in Committed and Unfunded. Off for people who
+  prefer reduced motion.
 - **Commitments table.** Sortable by any figure, filterable by status, and paged
   10 at a time on the server. Filter, sort and page live in the URL, so a refresh
   or a shared link keeps them. Pending commitments show "—" (read as "Not yet

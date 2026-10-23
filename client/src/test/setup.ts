@@ -11,10 +11,13 @@ afterEach(() => {
 })
 
 // jsdom lacks these browser APIs; Mantine components rely on them.
+// Tests run as if the user prefers reduced motion: count-ups and drawer transitions
+// finish instantly, so tests check end states without waiting on animations.
+// useCountUp.test.ts switches motion back on to test the animation itself.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
-    matches: false,
+    matches: query === '(prefers-reduced-motion: reduce)',
     media: query,
     onchange: null,
     addListener: () => {},
