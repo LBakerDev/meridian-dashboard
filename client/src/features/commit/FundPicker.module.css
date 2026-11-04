@@ -29,33 +29,24 @@
   outline-offset: -2px;
 }
 
-.terms {
-  color: var(--mantine-color-dimmed);
-}
-
-.figure {
-  color: var(--mantine-color-text);
-  font-family: var(--mantine-font-family-monospace);
+/* Sans with even-width digits: figures stay tidy without switching to monospace. */
+.meta {
   font-variant-numeric: tabular-nums;
 }
 
-.holding {
-  color: var(--meridian-brand);
-}
-
-.holding .figure {
-  color: inherit;
-}
-
-.closeBadge {
+.meta + .meta {
   flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.closeLabel {
+  flex-shrink: 0;
+  margin-top: rem(2px);
   white-space: nowrap;
 }
 
 .warning {
   color: var(--meridian-pending);
-  border: 1px solid color-mix(in srgb, var(--meridian-pending) 35%, transparent);
-  background-color: color-mix(in srgb, var(--meridian-pending) 6%, transparent);
 }
 
 .skeletonRow {

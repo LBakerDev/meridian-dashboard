@@ -1,10 +1,10 @@
-import { Alert, Badge, Button, CloseButton, Group, Skeleton, Text, TextInput, UnstyledButton } from '@mantine/core'
-import { useMemo, useState } from 'react'
+import { Alert, Button, CloseButton, Group, Skeleton, Text, TextInput, UnstyledButton } from '@mantine/core'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { useAllCommitments, useFunds } from '../../api/queries.ts'
 import type { Fund } from '../../api/types.ts'
 import { formatDate, formatMoneyCompact, formatPercent } from '../../domain/format.ts'
-import { closeInfo, committableFunds, holdingsByFund, type Holding } from '../../domain/funds.ts'
+import { closeInfo, holdingsByFund, inPickingOrder, type Holding } from '../../domain/funds.ts'
 import classes from './FundPicker.module.css'
 
 interface FundPickerProps {
@@ -20,7 +20,7 @@ export function FundPicker({ onSelect, selectedId = null }: FundPickerProps) {
   const commitments = useAllCommitments()
   const [search, setSearch] = useState('')
 
-  const open = useMemo(() => committableFunds(funds.data?.data ?? []), [funds.data])
+  const open = useMemo(() => inPickingOrder(funds.data?.data ?? []), [funds.data])
   const holdings = useMemo(() => holdingsByFund(commitments.data?.data ?? []), [commitments.data])
   const query = search.trim().toLowerCase()
   const shown = query ? open.filter((fund) => matches(fund, query)) : open
@@ -61,8 +61,7 @@ export function FundPicker({ onSelect, selectedId = null }: FundPickerProps) {
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className={classes.skeletonRow}>
               <Skeleton height={14} width="70%" />
-              <Skeleton height={10} width="45%" mt={8} />
-              <Skeleton height={10} width="60%" mt={8} />
+              <Skeleton height={10} width="55%" mt={8} />
             </div>
           ))}
         </div>
@@ -106,6 +105,10 @@ interface FundOptionProps {
   onSelect: () => void
 }
 
+/**
+ * Two lines: what the fund is and when it closes, then what it takes to join.
+ * Manager, fees and terms appear in the next step, once a fund is chosen.
+ */
 function FundOption({ fund, holding, selected, onSelect }: FundOptionProps) {
   return (
     <UnstyledButton className={classes.option} data-selected={selected || undefined} onClick={onSelect}>
@@ -115,65 +118,53 @@ function FundOption({ fund, holding, selected, onSelect }: FundOptionProps) {
         </Text>
         <CloseLabel fund={fund} />
       </Group>
-      <Text size="xs" c="dimmed" mt={2}>
-        {fund.strategy} · {fund.manager}
-      </Text>
-      <Group gap={6} mt={6} wrap="wrap">
-        <Text size="xs" className={classes.terms}>
-          Min <span className={classes.figure}>{formatMoneyCompact(fund.minInvestment, fund.currency)}</span>
-          {' · '}Target <span className={classes.figure}>{formatPercent(fund.targetIrrPct)}</span>
-          {' · '}Fees{' '}
-          <span className={classes.figure} title={`${fund.managementFeePct}% management fee, ${fund.carryPct}% carry`}>
-            {fund.managementFeePct}% / {fund.carryPct}%
-          </span>
+      <Group justify="space-between" wrap="nowrap" gap="sm" mt={4}>
+        <Text size="xs" c="dimmed" className={classes.meta}>
+          {fund.strategy} · Min {formatMoneyCompact(fund.minInvestment, fund.currency)} · Target{' '}
+          {formatPercent(fund.targetIrrPct)}
         </Text>
-        {fund.currency !== 'USD' && (
-          <Badge size="xs" variant="outline" color="gray">
-            {fund.currency}
-          </Badge>
+        {holding && (
+          <Text size="xs" c="dimmed" className={classes.meta}>
+            You hold {formatMoneyCompact(holding.committed, fund.currency)}
+          </Text>
         )}
       </Group>
-      {holding && (
-        <Text size="xs" mt={6} className={classes.holding}>
-          You hold <span className={classes.figure}>{formatMoneyCompact(holding.committed, fund.currency)}</span>
-          {holding.hasPending && ' · pending close'}
-        </Text>
-      )}
     </UnstyledButton>
   )
 }
 
-/** Close date, with a warning when it's near, today, or already passed. */
+/** When the fund closes, as quiet text: amber when it's close, dimmed otherwise. */
 export function CloseLabel({ fund }: { fund: Fund }) {
   const { status, daysLeft } = closeInfo(fund)
+  const date = formatDate(fund.closeDate)
 
   if (status === 'passed') {
     return (
-      <Badge size="sm" color="gray" className={classes.closeBadge} title="Listed close date has passed; still accepting commitments">
-        Past close date
-      </Badge>
+      <Label title={`Listed to close ${date}; still accepting commitments`}>Past close date</Label>
     )
   }
-  if (status === 'today') {
-    return <Badge size="sm" variant="outline" className={`${classes.closeBadge} ${classes.warning}`}>Closes today</Badge>
-  }
+  if (status === 'today') return <Label warning>Closes today</Label>
   if (status === 'soon') {
     return (
-      <Badge size="sm" variant="outline" className={`${classes.closeBadge} ${classes.warning}`} title={`Closes ${formatDate(fund.closeDate)}`}>
+      <Label warning title={`Closes ${date}`}>
         {daysLeft === 1 ? '1 day left' : `${daysLeft} days left`}
-      </Badge>
+      </Label>
     )
   }
   if (fund.stage === 'closing_soon') {
     return (
-      <Badge size="sm" variant="outline" className={`${classes.closeBadge} ${classes.warning}`} title={`Closes ${formatDate(fund.closeDate)}`}>
+      <Label warning title={`Closes ${date}`}>
         Closing soon
-      </Badge>
+      </Label>
     )
   }
+  return <Label>Closes {date}</Label>
+}
+
+function Label({ warning = false, title, children }: { warning?: boolean; title?: string; children: ReactNode }) {
   return (
-    <Text size="xs" c="dimmed" className={classes.closeBadge}>
-      Closes {formatDate(fund.closeDate)}
+    <Text size="xs" c={warning ? undefined : 'dimmed'} fw={warning ? 500 : undefined} className={warning ? `${classes.closeLabel} ${classes.warning}` : classes.closeLabel} title={title}>
+      {children}
     </Text>
   )
 }

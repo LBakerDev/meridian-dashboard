@@ -47,7 +47,7 @@ describe('FundPicker', () => {
     expect(screen.getByLabelText('Loading funds')).toHaveAttribute('aria-busy', 'true')
   })
 
-  it('lists only funds accepting commitments, soonest close first', async () => {
+  it('lists only funds accepting commitments, soonest close first and past-close funds last', async () => {
     serve()
     renderWithProviders(<FundPicker onSelect={() => {}} />)
 
@@ -56,7 +56,7 @@ describe('FundPicker', () => {
       .getAllByRole('listitem')
       .map((item) => item.querySelector('[title]')?.getAttribute('title'))
 
-    expect(names).toEqual([granite.name, harborline.name, quarry.name, fairhaven.name, northwind.name, dunmore.name])
+    expect(names).toEqual([harborline.name, quarry.name, fairhaven.name, northwind.name, dunmore.name, granite.name])
     expect(screen.getByText('6 funds accepting commitments')).toBeInTheDocument()
     expect(screen.queryByText(closed.name)).not.toBeInTheDocument()
   })
@@ -73,15 +73,16 @@ describe('FundPicker', () => {
     expect(within(option(northwind.name)).getByText('Closes Dec 15, 2026')).toBeInTheDocument()
   })
 
-  it("shows each fund's minimum, target and fees in the fund's currency", async () => {
+  it("shows each fund's strategy, minimum and target, in the fund's currency", async () => {
     serve()
     renderWithProviders(<FundPicker onSelect={() => {}} />)
     await screen.findByRole('list', { name: 'Funds accepting commitments' })
 
-    expect(option(northwind.name)).toHaveTextContent('Min $250K · Target 18.0% · Fees 2% / 20%')
-    expect(within(option(dunmore.name)).getByText('€250K')).toBeInTheDocument()
-    expect(within(option(dunmore.name)).getByText('EUR')).toBeInTheDocument()
-    expect(within(option(northwind.name)).queryByText('USD')).not.toBeInTheDocument()
+    expect(option(northwind.name)).toHaveTextContent('Private Equity · Min $250K · Target 18.0%')
+    expect(option(dunmore.name)).toHaveTextContent('Private Credit · Min €250K · Target 18.0%')
+    // Manager and fees wait for the next step, once a fund is chosen.
+    expect(option(northwind.name)).not.toHaveTextContent('Northwind Capital Partners')
+    expect(option(northwind.name)).not.toHaveTextContent('Fees')
   })
 
   it('shows what you already hold in a fund', async () => {
@@ -89,7 +90,8 @@ describe('FundPicker', () => {
     renderWithProviders(<FundPicker onSelect={() => {}} />)
     await screen.findByRole('list', { name: 'Funds accepting commitments' })
 
-    expect(option(northwind.name)).toHaveTextContent('You hold $2.5M · pending close')
+    expect(option(northwind.name)).toHaveTextContent('You hold $2.5M')
+    expect(option(northwind.name)).not.toHaveTextContent('pending close')
     expect(option(quarry.name)).not.toHaveTextContent('You hold')
   })
 
@@ -115,6 +117,12 @@ describe('FundPicker', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Search funds' }))
     await user.type(screen.getByRole('textbox', { name: 'Search funds' }), 'dunmore')
     expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(1)
+
+    // Managers aren't shown in the list, but you can still find a fund by one.
+    await user.clear(screen.getByRole('textbox', { name: 'Search funds' }))
+    await user.type(screen.getByRole('textbox', { name: 'Search funds' }), 'quarry capital')
+    expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(1)
+    expect(option(quarry.name)).toBeInTheDocument()
   })
 
   it('offers to clear a search that matches nothing', async () => {

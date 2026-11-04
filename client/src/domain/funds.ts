@@ -53,6 +53,17 @@ export function closeInfo(fund: Fund, today: Date = new Date()): CloseInfo {
   return { status: 'scheduled', daysLeft }
 }
 
+/**
+ * The order to offer funds in: soonest close first, but funds already past their
+ * listed close date go last. They still accept commitments, yet sorting by date
+ * alone would lead the list with the stalest funds.
+ */
+export function inPickingOrder(funds: Fund[], today: Date = new Date()): Fund[] {
+  const ordered = committableFunds(funds)
+  const passed = (fund: Fund) => closeInfo(fund, today).status === 'passed'
+  return [...ordered.filter((fund) => !passed(fund)), ...ordered.filter(passed)]
+}
+
 export interface Holding {
   committed: number
   hasPending: boolean

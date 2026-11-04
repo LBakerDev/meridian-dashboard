@@ -5,9 +5,23 @@ import {
   committableFunds,
   currencyOf,
   holdingsByFund,
+  inPickingOrder,
   indexFunds,
   isCommittable,
 } from './funds.ts'
+
+describe('inPickingOrder', () => {
+  const today = new Date(2026, 9, 22)
+  const passed = makeFund({ id: 'passed', name: 'Passed', closeDate: '2026-09-30' })
+  const soon = makeFund({ id: 'soon', name: 'Soon', closeDate: '2026-10-31' })
+  const later = makeFund({ id: 'later', name: 'Later', closeDate: '2026-12-15' })
+  const closed = makeFund({ id: 'closed', name: 'Closed', stage: 'closed', closeDate: '2026-01-01' })
+
+  it('lists soonest close first, with funds past their close date last', () => {
+    const order = inPickingOrder([later, closed, passed, soon], today).map((fund) => fund.id)
+    expect(order).toEqual(['soon', 'later', 'passed'])
+  })
+})
 
 const usdFund = makeFund({ id: 'fund_usd', currency: 'USD' })
 const eurFund = makeFund({ id: 'fund_eur', currency: 'EUR' })
