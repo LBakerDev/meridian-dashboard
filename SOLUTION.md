@@ -28,9 +28,11 @@ One page: the portfolio, with committing capital in a drawer on top of it.
   in their own currency. Losses are red, with a real minus sign.
 - **Commit capital drawer.** Two steps:
   1. **Pick a fund.** Open and closing-soon funds, soonest close first, with
-     search, minimums in the fund's currency, target IRR, fees, close-date
-     warnings ("10 days left", "Closes today", "Past close date") and "You hold
-     $2.5M · pending close" where it applies.
+     funds past their listed close date at the end. Each is two lines: name and
+     close timing ("10 days left", "Closes today", "Past close date"), then
+     strategy, minimum in the fund's currency, target IRR and "You hold $2.5M"
+     where it applies. Manager and fees wait for step 2; search still matches
+     them.
   2. **Commit.** The fund's terms, then amount and a terms checkbox. The client
      checks the same rules as the server so most mistakes never make a round
      trip, but the server has the final say:
@@ -55,7 +57,7 @@ These aren't bugs to report, but each needed a decision:
 | Commitments have no currency field; 3 are in EUR funds | Currency comes from the fund. EUR rows show € and a badge |
 | `/portfolio/summary` adds EUR amounts into USD totals unconverted | A footnote under the summary says so and how many commitments it affects |
 | `closing_soon` funds still accept commitments | They're offered, not just `stage=open`. I fetch all funds, since closed ones are also needed for currency lookups |
-| Some "open" funds are past their listed close date | Still offered, since the server accepts them, but labelled "Past close date" |
+| Some "open" funds are past their listed close date | Still offered, since the server accepts them, but labelled "Past close date" and listed last |
 | The server's minimum message always says `$` | Swapped for the fund's symbol on EUR funds |
 | An 80-character fund name | Truncated with the full name on hover in the table, and clamped to two lines in the picker |
 | `pageSize` defaults to 25 | Requested explicitly everywhere |
