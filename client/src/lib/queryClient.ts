@@ -9,7 +9,7 @@ export const queryClient = new QueryClient({
       retry: 1,
     },
     mutations: {
-      // Never auto-retry a commit: a retried POST could create a duplicate commitment.
+      // Never auto-retry a write: a retried deposit could add money twice.
       retry: false,
     },
   },

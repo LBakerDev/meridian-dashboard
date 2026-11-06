@@ -1,50 +1,57 @@
 # Meridian
 
-A portfolio dashboard for private-markets investors: see what your
-commitments are worth, and commit capital to new funds.
+Goal-based investing, the way Acorns or Wealthfront do it: name what you're
+saving for, pick a ready-made portfolio, and a monthly deposit invests toward
+it. Meridian shows what it's all worth, how each goal is tracking, and
+everything that's happened.
 
 <!-- Add screenshots to docs/screenshots/ and uncomment:
-![Portfolio overview](docs/screenshots/portfolio.png)
-![Committing capital](docs/screenshots/commit.png)
+![Dark mode](docs/screenshots/dark.png)
+![A goal, adding money](docs/screenshots/goal.png)
 -->
 
-Built with React 19, TypeScript, Mantine and TanStack Query on top of a small
-Express API with realistic, deliberately messy data.
+React 19 · TypeScript · Mantine · TanStack Query, over a small Express mock API
+with realistic, deliberately messy data.
 
-## Why it's interesting
+## What it does
 
-Private-markets investing doesn't work like a brokerage account. You commit
-an amount, the fund draws it down over years, values are reported quarterly,
-and the data is full of edge cases. Meridian is about presenting that clearly:
+- **Your investments.** The total, the all-time gain as a pill
+  ("▲ $1,883 · 12.2%"), and a chart of value against what you put in. The gap
+  between the lines is your growth. Switch 6M / 1Y / All. Hover, or focus the
+  chart and use the arrow keys, to read any month.
+- **Goals.** Each with its portfolio, a 1–5 risk level, its monthly amount, a
+  progress bar, and a projection: "On track for Oct 2028". Goals that haven't
+  started say when they will; paused goals say so.
+- **A goal, up close.** Click one for its numbers and recent activity, then:
+  - **Add money:** quick amounts, and the payoff shown before you commit:
+    "This moves House deposit from Oct 2028 to Sep 2028."
+  - **Edit:** rename, change the target or monthly amount, or pause deposits,
+    with the new date shown against the old one before you save.
+- **New goal.** Pick a portfolio, name the goal, set a target and a monthly
+  amount, and see when you'd get there as you type.
+- **Activity.** Every deposit, dividend and fee. Filter, sort and page, with
+  the view kept in the URL. Columns never shift.
+- **Dark by default,** with a remembered light mode (warm paper and ink).
 
-- **Total value first.** The summary leads with what the money is worth today,
-  counting cash already returned (NAV + distributions), then the gain on the
-  capital actually called and the net MOIC. A bar shows how much of the
-  commitment has been called and how much is still owed.
-- **A table that holds up.** Sortable by any figure, filterable by status and
-  paged on the server, with its state in the URL so a refresh or a shared link
-  keeps the view. Fixed column widths, so sorting never shifts the layout.
-- **Committing capital without leaving the page.** A two-step drawer: pick a
-  fund (soonest close first, with close-date warnings and what you already
-  hold), then enter an amount and accept the terms. Field errors from the
-  server land under the right field, and a closed fund, a missing fund or a
-  dropped connection each get a clear message that keeps what you typed. On
-  success, the portfolio refreshes before the drawer closes, and the totals
-  count up to their new values so you see the money land.
-- **Honest about the data.** Unvalued commitments show "—", not 0%. EUR amounts
-  show in euros, and the summary notes that the API adds them into USD totals
-  unconverted. Funds past their listed close date are labelled, not hidden.
+## The details that matter
 
-## Tech stack
-
-| Area | Choice | Why |
-| --- | --- | --- |
-| UI | React 19, TypeScript, Vite | The starter; fast dev server and build |
-| Components | Mantine (core, form, notifications) | Accessible components and a theme that bends to a calm, paper-and-ink look; CSS Modules, no CSS-in-JS runtime |
-| Server data | TanStack Query | Caching, loading and error states, and refreshing after a commit |
-| Routing | React Router | Table state in the URL, and a proper not-found page |
-| Testing | Vitest, React Testing Library | Tests by role and label, which doubles as an accessibility check |
-| Type | Inter, IBM Plex Mono | Inter for text; Plex Mono with even-width digits so figures line up |
+- **Writes feel finished.** A drawer closes only once the page has the new
+  numbers. Then the total counts up to its new value, and a toast confirms.
+- **Errors land where they belong.**
+  - Mistakes are caught before sending.
+  - Server messages appear under the right field ("You can add up to $10,000 a
+    day ($200 left today)").
+  - A closed portfolio or missing goal explains itself and offers a way back.
+  - A dropped connection says nothing was sent, and keeps what you typed.
+- **Honest numbers.** A goal that hasn't started shows "Starts Dec 1", not $0
+  and 0% (the API sends zeros, not blanks). Projections say they assume a
+  return and aren't guaranteed.
+- **Accessible.**
+  - Every control is labelled, and the tests find things by role and name.
+  - The chart has a one-sentence summary for screen readers and works from the
+    keyboard. Risk dots are read as "Higher risk, 4 of 5".
+  - Drawers trap and return focus, and there's a skip link.
+  - Animations stop for people who prefer reduced motion.
 
 ## Running it
 
@@ -52,50 +59,46 @@ Requires Node.js 20.19+ or 22.12+ (`.nvmrc` pins 22).
 
 ```bash
 npm install
-npm start          # API on http://localhost:4000, app on http://localhost:5173
-npm run test:run   # run the test suite once (npm test to watch)
+npm run dev        # API on :4000, app on http://localhost:5173
+npm run test:run   # the test suite (npm test to watch)
 ```
 
-The API adds about 350 ms of latency to every request on purpose, to keep
-loading states honest. Use `LATENCY_MS=0 npm start` to turn it off. API
-reference: Swagger at http://localhost:4000/docs, or [docs/API.md](docs/API.md).
+The API waits ~350 ms per request on purpose, so loading states are real.
+`LATENCY_MS=0 npm run dev` turns that off. The sample data resets whenever the
+server restarts. Endpoints are documented in [docs/API.md](docs/API.md).
 
-## How it's organised
+## How it's built
 
 ```
 client/src/
-  api/        typed client, endpoints, TanStack Query hooks
-  domain/     business rules and formatting: plain functions, unit-tested
-  features/   portfolio/ (summary, table) and commit/ (drawer, fund picker, form)
-  hooks/      shared React hooks (count-up animation)
-  pages/      thin compositions of features
-  app/        shell and layout
-  theme/      Mantine theme and colour tokens (gain, loss, pending, brand)
-  test/       fetch mocks, data factories, render helpers
+  api/        typed client (ApiError with status + field messages), endpoints, TanStack Query hooks
+  domain/     rules as plain functions: progress, projections, risk, formatting (unit-tested)
+  features/   overview/ (total + chart), goals/ (list + drawers), activity/ (table), shared/
+  hooks/      useCountUp
+  theme/      Mantine theme and color tokens for both schemes
+  test/       a fake of the whole API, data factories, render helpers
+server/       the Express mock API and its sample data
 ```
 
-Data flows one way: components → query hooks → API client → server. Rules
-such as "is this commitment valued yet?" or "how close is this fund to
-closing?" live in `domain/`, so they're tested without rendering anything.
-[docs/data-layer.md](docs/data-layer.md) explains the caching and refresh
-choices.
+Data flows one way: components → query hooks → endpoints → client → server.
+[docs/data-layer.md](docs/data-layer.md) explains the caching, what each write
+refreshes, and why writes never retry.
 
-## Accessibility
-
-- Every control has a label, and the tests find elements by role and name.
-- Sortable headers announce their sort order; values not yet reported are
-  read as "Not yet valued" rather than a dash.
-- A skip link, visible focus rings, and a drawer that traps and returns focus.
-- Animations (the count-up, the header pulse) are off for people who prefer
-  reduced motion.
+| | Choice | Why |
+| --- | --- | --- |
+| Components | Mantine | Accessible drawers, inputs and tables; a theme that carries two looks through one set of color tokens |
+| Server data | TanStack Query | Caching, loading and error states, cancelling stale requests, refreshing exactly what a write changed |
+| Routing | React Router | The activity view lives in the URL; unknown addresses get a proper page |
+| Chart | Hand-built SVG | One line chart didn't justify a charting library; this one is small, themable and keyboard-accessible |
+| Testing | Vitest, Testing Library | Tests by role and label double as an accessibility check |
+| Type | Inter, IBM Plex Mono | Inter throughout; Plex Mono for figures in light mode |
 
 ## Background
 
-Meridian started as a timeboxed front-end exercise: a provided Express API and
-dataset, with the brief to build a dashboard on top of it. The original brief
-is in [docs/BRIEF.md](docs/BRIEF.md). I've kept developing it since.
-[SOLUTION.md](SOLUTION.md) covers the decisions, trade-offs, how I worked with
-AI tools, and what I'd do next.
+Meridian started as a timeboxed front-end exercise built on a provided API
+for private-markets investing. I've since rebuilt it around goal-based
+investing, with my own mock API and data, so that anyone can follow it without
+a glossary.
 
-The backend (`server.js`, `src/data/`) and the API docs came with the exercise;
-the front end in `client/` is mine.
+[docs/how-it-was-built.md](docs/how-it-was-built.md) covers the decisions, the
+pivot, how I worked with AI, and what I'd do next.

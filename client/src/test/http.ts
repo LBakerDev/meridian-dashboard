@@ -10,7 +10,7 @@ export function jsonResponse(status: number, body: unknown): Response {
 
 export interface FetchCall {
   method: string
-  /** Path including the query string, e.g. "/api/commitments?pageSize=100" */
+  /** Path including the query string, e.g. "/api/activity?type=dividend&page=2" */
   path: string
   body: unknown
 }

@@ -1,167 +1,73 @@
-# API Reference
+# Meridian mock API
 
-Base URL: `http://localhost:4000/api`
+A small Express server (`server/index.js`) with in-memory sample data
+(`server/data.js`). Changes last until it restarts. Sample dates are relative
+to today, so the data never looks stale.
 
-All responses are JSON. Every request is served with a simulated latency
-(default `350ms`) so that loading and pending states are meaningful — set
-`LATENCY_MS=0` to disable it while debugging.
+- Base URL: `http://localhost:4000/api` (the front end reaches it at `/api` through the Vite proxy)
+- Every request waits `LATENCY_MS` (default 350) so loading states are real. `LATENCY_MS=0 npm start` turns it off.
+- Lists return `{ data, meta: { page, pageSize, total, totalPages } }`.
+- Errors return `{ error, fields? }`:
+  - **400** validation, with a message per field
+  - **404** not found
+  - **409** conflict, e.g. a portfolio closed to new goals
 
-Collection endpoints return an envelope:
+## Reads
 
-```json
-{
-  "data": [ /* rows */ ],
-  "meta": { "page": 1, "pageSize": 25, "total": 7, "totalPages": 1 }
-}
-```
+| Endpoint | Returns |
+| --- | --- |
+| `GET /summary` | `value`, `contributed`, `gain`, `gainPct`, `monthlyTotal` (goals not paused), `nextDepositDate`, `goalCount`, `currency` |
+| `GET /history` | `{ data: [{ month: "2025-12", value, contributed }] }`, 24 months, oldest first |
+| `GET /portfolios` | Portfolios: `id`, `name`, `category`, `risk` (1–5), `minMonthly`, `feePct`, `assumedReturnPct`, `status` (`open` / `closed`), `description`. Filter: `?status=` |
+| `GET /goals` | Goals: `id`, `name`, `portfolioId`, `portfolioName`, `risk`, `target`, `monthlyAmount`, `contributed`, `value`, `returnPct`, `status`, `nextDepositDate`, `createdAt`. Filter: `?status=active\|scheduled\|paused` |
+| `GET /goals/:id` | One goal, or 404 |
+| `GET /activity` | Deposits, dividends and fees: `id`, `date`, `type`, `description`, `goalId`, `goalName`, `amount` (negative for fees). Query: `type`, `goalId`, `sort=date\|amount`, `order=asc\|desc`, `page`, `pageSize` (default 25, max 100) |
 
-Detail endpoints return the resource object directly. Errors return
-`{ "error": string, "fields"?: { [field]: string } }`.
+Goal statuses: `scheduled` (created, first deposit not yet made), `active`,
+`paused` (monthly deposits stopped; still invested).
 
-### Common query parameters (collection endpoints)
+## Writes
 
-| Param      | Description                                              |
-|------------|----------------------------------------------------------|
-| `page`     | 1-based page number (default `1`)                         |
-| `pageSize` | Rows per page, max `100` (default `25`)                   |
-| `sort`     | Field name to sort by                                     |
-| `order`    | `asc` (default) or `desc`                                 |
-
----
-
-## Health
-
-### `GET /health`
-```json
-{ "status": "ok", "time": "2026-09-29T23:00:00.000Z" }
-```
-
----
-
-## Portfolio
-
-### `GET /portfolio/summary`
-Aggregated KPIs across all commitments. Recomputed on each request, so it
-reflects any commitments you create.
+### `POST /goals`
 
 ```json
-{
-  "totalCommitted": 10500000,
-  "totalCalled": 5925000,
-  "totalDistributed": 1620000,
-  "totalNav": 5728000,
-  "unfundedCommitment": 4575000,
-  "netMoic": 1.24,
-  "netDpi": 0.27,
-  "activeCommitments": 5,
-  "currency": "USD"
-}
+{ "portfolioId": "core-growth", "name": "Wedding", "target": 15000, "monthlyAmount": 400, "acknowledged": true }
 ```
 
----
+- **201:** the new goal, `scheduled`, with `value: 0` and `returnPct: 0` (zeros, not nulls).
+- **400** fields:
+  - `name`: required, under 40 characters
+  - `target`: at least $100
+  - `monthlyAmount`: at least the portfolio's `minMonthly`, at most $10,000
+  - `acknowledged`: must be true
+- **404:** unknown portfolio. **409:** portfolio closed.
 
-## Funds
+### `PATCH /goals/:id`
 
-### `GET /funds`
-Filters: `strategy`, `stage` (`open` | `closing_soon` | `closed`), `region`,
-`q` (matches fund name or manager). Supports sort + pagination.
+Any of `name`, `target`, `monthlyAmount`, `paused`.
 
-```jsonc
-// GET /funds?stage=open&sort=targetIrrPct&order=desc
-{
-  "data": [
-    {
-      "id": "fund_northwind_iv",
-      "name": "Northwind Buyout Fund IV",
-      "manager": "Northwind Capital Partners",
-      "strategy": "Private Equity",
-      "region": "North America",
-      "vintage": 2025,
-      "stage": "open",
-      "currency": "USD",
-      "fundSize": 850000000,
-      "minInvestment": 250000,
-      "targetIrrPct": 18.0,
-      "managementFeePct": 2.0,
-      "carryPct": 20.0,
-      "investmentPeriodYears": 5,
-      "fundTermYears": 10,
-      "closeDate": "2026-12-15",
-      "summary": "…",
-      "highlights": ["…"]
-    }
-  ],
-  "meta": { "page": 1, "pageSize": 25, "total": 5, "totalPages": 1 }
-}
-```
+- **200:** the updated goal.
+- **400** fields: `name`; `target` (must be above the current value); `monthlyAmount` (at least the portfolio minimum, unless pausing).
+- **404:** unknown goal.
 
----
+### `POST /goals/:id/deposits`
 
-## Commitments (the investor's investments)
-
-### `GET /commitments`
-Filters: `status` (`active` | `pending_close`), `fundId`.
-Supports sort + pagination. Sortable fields include `committed`, `called`,
-`distributed`, `nav`, `netIrrPct`, `netMoic`, `dateCommitted`.
-
-> `nav`, `netIrrPct`, `netMoic`, and `netDpi` may be `null` on a commitment that
-> hasn't been valued yet (e.g. one that's pending close). Handle that in the UI.
-
-```jsonc
-{
-  "data": [
-    {
-      "id": "cm_0001",
-      "fundId": "fund_silverpeak_v",
-      "fundName": "Silverpeak Growth Equity V",
-      "manager": "Silverpeak Growth",
-      "strategy": "Growth Equity",
-      "committed": 2000000,
-      "called": 1400000,
-      "distributed": 520000,
-      "nav": 1680000,
-      "dateCommitted": "2022-09-12",
-      "status": "active",
-      "netIrrPct": 19.4,
-      "netMoic": 1.57,
-      "netDpi": 0.37
-    }
-  ],
-  "meta": { "page": 1, "pageSize": 25, "total": 6, "totalPages": 1 }
-}
-```
-
-### `GET /commitments/:id`
-Returns a single commitment, or `404`.
-
-### `POST /funds/:id/commitments`
-Commit capital to a fund. **This is the primary write for the modal/form task.**
-
-Request body:
 ```json
-{
-  "amount": 300000,
-  "acknowledgedTerms": true
-}
+{ "amount": 250 }
 ```
 
-Validation:
-- `amount` — required, positive number, and `>= fund.minInvestment`.
-- `acknowledgedTerms` — must be `true`.
+- **201:** `{ goal, activity }`. Updates the goal, the totals, the last history point and the activity.
+- **400** `amount`: at least $10, and at most $10,000 a day across one-off deposits. The message says how much is left today.
+- **404:** unknown goal.
 
-Responses:
-- `201` — the newly created commitment (status `pending_close`). It will appear
-  in subsequent `GET /commitments` calls.
-- `400` — `{ "error": "...", "fields": { "amount": "Minimum commitment…" } }`
-- `404` — unknown fund id.
-- `409` — the fund is `closed` to new commitments.
+## Sample data
 
----
+Deliberately a little messy, so the front end has edge cases to handle:
 
-## Notes
-
-- **State is in-memory.** Commitments you create persist until the server
-  restarts, then reset to the seed data.
-- **No authentication.** Treat the data as belonging to a single signed-in user.
-- **CORS is open**, so you can run your front end on any port (e.g. Vite on
-  `5173`, CRA on `3000`).
+| Goal or portfolio | What's unusual |
+| --- | --- |
+| **Japan trip** | Hasn't started, and returns zeros rather than blanks |
+| **Retirement top-up** | Paused |
+| **Climate bet** | Down 5% |
+| **Global Sustainable Infrastructure & Real Assets Income Portfolio** | 65-character name |
+| **Crypto Pioneers** | Closed to new goals |

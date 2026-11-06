@@ -1,8 +1,8 @@
 {
-  "name": "gridline-frontend-assessment",
+  "name": "meridian",
   "version": "1.0.0",
   "private": true,
-  "description": "Take-home assessment for front-end engineering candidates: a mock API plus a React starter.",
+  "description": "Goal-based investing dashboard: a React front end over a small Express mock API.",
   "license": "UNLICENSED",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

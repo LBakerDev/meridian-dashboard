@@ -9,7 +9,7 @@ describe('buildQuery', () => {
   })
 
   it('skips undefined, null and empty values', () => {
-    expect(buildQuery({ status: undefined, fundId: null, q: '', page: 2 })).toBe('?page=2')
+    expect(buildQuery({ type: undefined, goalId: null, q: '', page: 2 })).toBe('?page=2')
   })
 
   it('encodes values', () => {
@@ -26,39 +26,39 @@ describe('request', () => {
   })
 
   it('sends a JSON body with a content-type header on POST', async () => {
-    const fetchMock = mockFetch(jsonResponse(201, { id: 'cm_0021' }))
+    const fetchMock = mockFetch(jsonResponse(201, { id: 'act_00099' }))
 
-    await request('/funds/fund_x/commitments', { method: 'POST', body: { amount: 250000, acknowledgedTerms: true } })
+    await request('/goals/goal_0001/deposits', { method: 'POST', body: { amount: 250 } })
 
     const [, init] = fetchMock.mock.calls[0]
     expect(init?.headers).toEqual({ 'Content-Type': 'application/json' })
-    expect(init?.body).toBe(JSON.stringify({ amount: 250000, acknowledgedTerms: true }))
+    expect(init?.body).toBe(JSON.stringify({ amount: 250 }))
   })
 
   it('throws an ApiError with field messages on a 400', async () => {
     mockFetch(
       jsonResponse(400, {
         error: 'Please correct the highlighted fields.',
-        fields: { amount: 'Minimum commitment for this fund is $250,000.' },
+        fields: { amount: 'The minimum one-off deposit is $10.' },
       }),
     )
 
-    const error = await request('/funds/fund_x/commitments', { method: 'POST', body: {} }).catch((e) => e)
+    const error = await request('/goals/goal_0001/deposits', { method: 'POST', body: {} }).catch((e) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({
       status: 400,
       message: 'Please correct the highlighted fields.',
-      fields: { amount: 'Minimum commitment for this fund is $250,000.' },
+      fields: { amount: 'The minimum one-off deposit is $10.' },
     })
   })
 
   it('keeps the server message on a 409', async () => {
-    mockFetch(jsonResponse(409, { error: 'Silverpeak Growth Equity V is closed to new commitments.' }))
+    mockFetch(jsonResponse(409, { error: 'Crypto Pioneers is no longer open to new goals.' }))
 
-    const error = await request('/funds/fund_silverpeak_v/commitments', { method: 'POST', body: {} }).catch((e) => e)
+    const error = await request('/goals', { method: 'POST', body: { portfolioId: 'crypto-pioneers' } }).catch((e) => e)
 
-    expect(error).toMatchObject({ status: 409, message: 'Silverpeak Growth Equity V is closed to new commitments.', fields: {} })
+    expect(error).toMatchObject({ status: 409, message: 'Crypto Pioneers is no longer open to new goals.', fields: {} })
   })
 
   it('falls back to a generic message when the error body is not JSON', async () => {
