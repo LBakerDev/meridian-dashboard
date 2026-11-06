@@ -9,8 +9,8 @@
   },
   "type": "commonjs",
   "scripts": {
-    "start": "concurrently -n api,web -c cyan,magenta -k \"node server.js\" \"vite client\"",
-    "dev": "concurrently -n api,web -c cyan,magenta -k \"node --watch server.js\" \"vite client\"",
+    "start": "concurrently -n api,web -c cyan,magenta -k \"node server/index.js\" \"vite client\"",
+    "dev": "concurrently -n api,web -c cyan,magenta -k \"node --watch server/index.js\" \"vite client\"",
     "build": "tsc -b client && vite build client",
     "preview": "vite preview client",
     "lint": "oxlint client",
