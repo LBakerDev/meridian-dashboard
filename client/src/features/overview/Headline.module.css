@@ -1,0 +1,75 @@
+.card {
+  padding: rem(24px) rem(28px) rem(18px);
+}
+
+/* The page's h1, styled as a quiet label above the total. */
+.label {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 400;
+  color: var(--mantine-color-dimmed);
+}
+
+.hero {
+  margin-top: rem(8px);
+  font-family: var(--meridian-figure-font);
+  font-size: rem(46px);
+  font-weight: var(--meridian-hero-weight);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.figure {
+  font-family: var(--meridian-figure-font);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The all-time change, as a pill rather than a sentence. */
+.change {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(6px);
+  padding: rem(4px) rem(10px);
+  border-radius: 999px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.change[data-tone='gain'] {
+  color: var(--meridian-gain);
+  background-color: color-mix(in srgb, var(--meridian-gain) 12%, transparent);
+}
+
+.change[data-tone='loss'] {
+  color: var(--meridian-loss);
+  background-color: color-mix(in srgb, var(--meridian-loss) 12%, transparent);
+}
+
+.chartArea {
+  margin-top: rem(16px);
+  min-height: rem(220px);
+}
+
+.chartError {
+  height: rem(220px);
+}
+
+.legend {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.swatch {
+  display: inline-block;
+  width: rem(14px);
+  margin-right: rem(6px);
+  vertical-align: middle;
+}
+
+.swatch[data-line='value'] {
+  border-top: 2px solid var(--meridian-chart-line);
+}
+
+.swatch[data-line='contributed'] {
+  border-top: 2px dashed var(--meridian-chart-dash);
+}

@@ -1,0 +1,116 @@
+/* Shared by the New goal and goal drawers. */
+
+.options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.options > li + li {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: rem(12px);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.option:hover,
+.option[data-selected] {
+  background-color: var(--meridian-surface-muted);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.figure {
+  font-family: var(--meridian-figure-font);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The chosen portfolio, above the form. */
+.picked {
+  padding: rem(14px) rem(16px);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--meridian-surface-muted);
+}
+
+/* The live "you'd reach it around …" line. */
+.projection {
+  padding: rem(12px) rem(14px);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  line-height: 1.5;
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: rem(36px);
+  height: rem(36px);
+  border-radius: rem(12px);
+  font-weight: 600;
+  color: var(--meridian-ink);
+  background-color: var(--meridian-surface-muted);
+
+  @mixin dark {
+    color: var(--goal);
+    background-color: color-mix(in srgb, var(--goal) 16%, transparent);
+  }
+}
+
+.hero {
+  font-family: var(--meridian-figure-font);
+  font-size: rem(36px);
+  font-weight: var(--meridian-hero-weight);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  height: rem(8px);
+  border-radius: 999px;
+  background-color: var(--meridian-track);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--meridian-ink);
+
+  @mixin dark {
+    background-color: var(--goal);
+  }
+}
+
+.gain {
+  color: var(--meridian-gain);
+}
+
+.loss {
+  color: var(--meridian-loss);
+}
+
+.recent {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent > li {
+  display: flex;
+  justify-content: space-between;
+  gap: rem(12px);
+  padding: rem(10px) 0;
+  border-top: 1px solid var(--mantine-color-default-border);
+}

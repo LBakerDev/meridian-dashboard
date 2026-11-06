@@ -1,46 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import {
-  currencySymbol,
-  formatDate,
-  formatMoney,
-  formatMoneyCompact,
-  formatMonthYear,
-  formatMultiple,
-  formatPercent,
-  formatShortDate,
-  formatSignedMoney,
-  localizeCurrencyInMessage,
-  parseDate,
-} from './format.ts'
+import { formatDate, formatMoney, formatMonthYear, formatPercent, formatShortDate, formatSignedMoney, parseDate } from './format.ts'
 
 describe('formatMoney', () => {
   it('formats whole dollars with separators', () => {
     expect(formatMoney(2_000_000)).toBe('$2,000,000')
   })
 
-  it('drops the stray cents in the seed data', () => {
-    expect(formatMoney(1_245_678.9)).toBe('$1,245,679')
-  })
-
-  it('uses the fund currency', () => {
-    expect(formatMoney(250_000, 'EUR')).toBe('€250,000')
-  })
-})
-
-describe('formatMoneyCompact', () => {
-  it.each([
-    [5_925_000, '$5.93M'],
-    [10_500_000, '$10.5M'],
-    [850_000_000, '$850M'],
-    [2_100_000_000, '$2.1B'],
-    [250_000, '$250K'],
-    [0, '$0'],
-  ])('formats %d as %s without padded decimals', (amount, expected) => {
-    expect(formatMoneyCompact(amount)).toBe(expected)
-  })
-
-  it('uses the fund currency', () => {
-    expect(formatMoneyCompact(1_180_000, 'EUR')).toBe('€1.18M')
+  it('drops stray cents', () => {
+    expect(formatMoney(17_333.4)).toBe('$17,333')
   })
 })
 
@@ -59,36 +26,6 @@ describe('formatPercent', () => {
   })
 })
 
-describe('formatMultiple', () => {
-  it('shows two decimals and a multiplication sign', () => {
-    expect(formatMultiple(1.5)).toBe('1.50×')
-    expect(formatMultiple(0.96)).toBe('0.96×')
-  })
-})
-
-describe('currencySymbol', () => {
-  it('returns the symbol for a currency code', () => {
-    expect(currencySymbol('USD')).toBe('$')
-    expect(currencySymbol('EUR')).toBe('€')
-  })
-})
-
-describe('localizeCurrencyInMessage', () => {
-  const serverMessage = 'Minimum commitment for this fund is $250,000.'
-
-  it('swaps the hard-coded "$" for the fund currency', () => {
-    expect(localizeCurrencyInMessage(serverMessage, 'EUR')).toBe('Minimum commitment for this fund is €250,000.')
-  })
-
-  it('leaves USD messages alone', () => {
-    expect(localizeCurrencyInMessage(serverMessage, 'USD')).toBe(serverMessage)
-  })
-
-  it('leaves messages without a currency alone', () => {
-    expect(localizeCurrencyInMessage('Enter a commitment amount.', 'EUR')).toBe('Enter a commitment amount.')
-  })
-})
-
 describe('dates', () => {
   it('parses YYYY-MM-DD as a local calendar date, not UTC midnight', () => {
     const date = parseDate('2026-01-15')
@@ -100,7 +37,7 @@ describe('dates', () => {
   })
 })
 
-describe('goal-based formatting', () => {
+describe('goal formatting', () => {
   it('formats a projected month', () => {
     expect(formatMonthYear(new Date(2028, 9, 1))).toBe('Oct 2028')
   })

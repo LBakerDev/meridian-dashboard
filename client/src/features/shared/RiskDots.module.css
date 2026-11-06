@@ -1,0 +1,16 @@
+.dots {
+  display: inline-flex;
+  gap: rem(2px);
+  vertical-align: middle;
+}
+
+.dots i {
+  width: rem(6px);
+  height: rem(6px);
+  border-radius: 50%;
+  background-color: var(--meridian-track);
+}
+
+.dots i[data-on] {
+  background-color: var(--mantine-color-dimmed);
+}

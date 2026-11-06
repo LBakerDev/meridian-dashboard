@@ -1,0 +1,91 @@
+.chart {
+  position: relative;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: rem(220px);
+  overflow: visible;
+  outline: none;
+}
+
+.svg:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 4px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.grid {
+  stroke: var(--meridian-chart-grid);
+}
+
+.axis {
+  fill: var(--mantine-color-dimmed);
+  font-size: 11px;
+  font-family: var(--meridian-figure-font);
+}
+
+.fillTop {
+  stop-color: var(--meridian-chart-line);
+  stop-opacity: var(--meridian-chart-fill-opacity);
+}
+
+.fillBottom {
+  stop-color: var(--meridian-chart-line);
+  stop-opacity: 0;
+}
+
+.value {
+  fill: none;
+  stroke: var(--meridian-chart-line);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+}
+
+.contributed {
+  fill: none;
+  stroke: var(--meridian-chart-dash);
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+}
+
+.cursor {
+  stroke: var(--mantine-color-text);
+  stroke-opacity: 0.2;
+}
+
+.dot {
+  fill: var(--meridian-chart-line);
+  stroke: var(--meridian-card);
+  stroke-width: 2;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, -112%);
+  display: flex;
+  flex-direction: column;
+  gap: rem(1px);
+  padding: rem(8px) rem(10px);
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--meridian-tooltip);
+  color: #fff;
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.figure {
+  font-family: var(--meridian-figure-font);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip [data-tone='gain'] {
+  color: #6fdc9f;
+}
+
+.tooltip [data-tone='loss'] {
+  color: #ff8f80;
+}

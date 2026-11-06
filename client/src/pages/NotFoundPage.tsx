@@ -12,7 +12,7 @@ export function NotFoundPage() {
       </Title>
       <Text c="dimmed">That address doesn't match anything in Meridian.</Text>
       <Button component={Link} to="/" variant="default">
-        Back to portfolio
+        Back to your investments
       </Button>
     </Stack>
   )

@@ -2,12 +2,7 @@ import { buildQuery, request } from './client.ts'
 import type {
   Activity,
   ActivityListParams,
-  Commitment,
-  CommitmentListParams,
-  CommitRequest,
   DepositResult,
-  Fund,
-  FundListParams,
   Goal,
   GoalUpdate,
   HistoryPoint,
@@ -15,28 +10,10 @@ import type {
   Overview,
   Paginated,
   Portfolio,
-  PortfolioSummary,
 } from './types.ts'
 
-/** One function per endpoint in docs/API.md. Components use the hooks in queries.ts, not these. */
+/** One function per endpoint in server/index.js. Components use the hooks in queries.ts, not these. */
 export const api = {
-  getSummary: (signal?: AbortSignal) =>
-    request<PortfolioSummary>('/portfolio/summary', { signal }),
-
-  listCommitments: (params: CommitmentListParams = {}, signal?: AbortSignal) =>
-    request<Paginated<Commitment>>(`/commitments${buildQuery({ ...params })}`, { signal }),
-
-  getCommitment: (id: string, signal?: AbortSignal) =>
-    request<Commitment>(`/commitments/${encodeURIComponent(id)}`, { signal }),
-
-  listFunds: (params: FundListParams = {}, signal?: AbortSignal) =>
-    request<Paginated<Fund>>(`/funds${buildQuery({ ...params })}`, { signal }),
-
-  commitToFund: (fundId: string, body: CommitRequest) =>
-    request<Commitment>(`/funds/${encodeURIComponent(fundId)}/commitments`, { method: 'POST', body }),
-
-  // ---- Goal-based investing (server/index.js) ----
-
   getOverview: (signal?: AbortSignal) => request<Overview>('/summary', { signal }),
 
   getHistory: (signal?: AbortSignal) => request<{ data: HistoryPoint[] }>('/history', { signal }),
