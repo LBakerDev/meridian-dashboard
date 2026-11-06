@@ -67,6 +67,20 @@ The API waits ~350 ms per request on purpose, so loading states are real.
 `LATENCY_MS=0 npm run dev` turns that off. The sample data resets whenever the
 server restarts. Endpoints are documented in [docs/API.md](docs/API.md).
 
+## Deploying
+
+In production, one Express server serves both the mock API and the built app,
+so the demo is a single service at a single URL. A [Render](https://render.com)
+blueprint is included (`render.yaml`):
+
+1. In Render: **New → Blueprint**, then pick this repo. It reads `render.yaml`.
+2. Render runs `npm run build`, then starts `node server/index.js`.
+
+Any host that runs Node works the same way: build with `npm install --include=dev && npm run build`,
+start with `node server/index.js`, and it listens on `PORT`. On Render's free
+plan the service sleeps when idle, so the first visit can take up to a minute,
+and the sample data is shared by all visitors and resets on each restart.
+
 ## How it's built
 
 ```
@@ -81,6 +95,8 @@ server/       the Express mock API and its sample data
 ```
 
 Data flows one way: components → query hooks → endpoints → client → server.
+[docs/architecture.md](docs/architecture.md) walks through the system with diagrams:
+what runs where, components, state, a write end to end, errors, theming and tests.
 [docs/data-layer.md](docs/data-layer.md) explains the caching, what each write
 refreshes, and why writes never retry.
 

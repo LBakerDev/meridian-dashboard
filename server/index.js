@@ -25,6 +25,8 @@
  * Errors return { error, fields? } with 400 (validation), 404 (not found) or 409 (conflict).
  */
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { portfolios, portfolioById, goals, activity, history, isoDate, nextDeposit, round1, nextActivityId } = require('./data');
@@ -229,6 +231,16 @@ app.post('/api/goals/:id/deposits', (req, res) => {
 });
 
 app.use('/api', (_req, res) => notFound(res, 'Endpoint'));
+
+// In production (after `npm run build`), serve the built app from the same
+// server, so the whole demo is one service at one URL. In development Vite
+// serves the app instead, and this folder doesn't exist.
+const dist = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(dist)) {
+  app.use(express.static(dist));
+  // Any other address loads the app, which handles routing (and shows its own 404).
+  app.get(/^(?!\/api\/).*/, (_req, res) => res.sendFile(path.join(dist, 'index.html')));
+}
 
 app.listen(PORT, () => {
   console.log(`\n  Meridian mock API at http://localhost:${PORT}/api`);

@@ -2,8 +2,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// The assessment API runs separately at :4000 (see repo root `npm start`).
-// Proxy /api to it so the browser makes same-origin requests in dev.
+// In dev, the mock API runs separately at :4000 (see the root `npm run dev`).
+// Proxy /api to it so the browser makes same-origin requests. In production
+// the same server serves both the API and the built app (server/index.js).
 export default defineConfig({
   plugins: [react()],
   server: {

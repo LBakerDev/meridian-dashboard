@@ -1,0 +1,14 @@
+# One Render web service: Express serves the mock API and the built app.
+# In Render: New → Blueprint → pick this repo. See README "Deploying".
+services:
+  - type: web
+    name: meridian
+    runtime: node
+    plan: free
+    # Dev dependencies are needed to build (TypeScript, Vite).
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
