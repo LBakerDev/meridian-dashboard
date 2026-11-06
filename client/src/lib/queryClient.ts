@@ -3,8 +3,9 @@ import { QueryClient } from '@tanstack/react-query'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Portfolio data changes only when the investor commits; 30s avoids
-      // refetching on every tab switch while still picking up changes.
+      // Data only changes when you create, edit or add to a goal (and those
+      // writes refresh what they change), so 30s avoids refetching on every
+      // tab switch while still picking up changes.
       staleTime: 30_000,
       retry: 1,
     },
