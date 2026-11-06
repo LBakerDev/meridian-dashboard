@@ -6,6 +6,7 @@ import { afterEach, vi } from 'vitest'
 afterEach(() => {
   cleanup()
   notifications.clean() // the toast store is global; don't let one test's toasts leak into the next
+  localStorage.clear() // e.g. a saved color scheme
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })

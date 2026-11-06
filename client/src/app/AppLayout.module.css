@@ -74,13 +74,17 @@
   padding: rem(8px) rem(12px);
   border-radius: var(--mantine-radius-sm);
   background-color: var(--mantine-primary-color-filled);
-  color: var(--mantine-color-white);
+  color: var(--mantine-primary-color-contrast);
   font-size: var(--mantine-font-size-sm);
   text-decoration: none;
 }
 
 .skipLink:focus {
   top: rem(12px);
+}
+
+.main {
+  background-color: var(--meridian-page);
 }
 
 .main:focus {

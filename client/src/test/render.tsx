@@ -17,7 +17,7 @@ export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?:
 
   function Providers({ children }: { children: ReactNode }) {
     return (
-      <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} forceColorScheme="light">
+      <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="light">
         <Notifications />
         <QueryWrapper>
           <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>

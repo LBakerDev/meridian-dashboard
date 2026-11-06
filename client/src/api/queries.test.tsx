@@ -1,209 +1,199 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { makeCommitment, makeFund, makePage, makeSummary } from '../test/factories.ts'
+import { makeActivity, makeGoal, makeHistory, makeOverview, makePage, makePortfolio } from '../test/factories.ts'
 import { deferred, jsonResponse, routeFetch } from '../test/http.ts'
 import { createQueryWrapper } from '../test/queryWrapper.tsx'
-import type { CommitmentListParams } from './types.ts'
 import {
-  useCommitment,
-  useCommitments,
-  useCommitToFund,
-  useFunds,
-  useSummary,
+  useActivity,
+  useAddMoney,
+  useCreateGoal,
+  useGoals,
+  useHistory,
+  useOverview,
+  usePortfolios,
+  useUpdateGoal,
 } from './queries.ts'
+import type { ActivityListParams } from './types.ts'
 
-const created = makeCommitment({
-  id: 'cm_0021',
-  fundId: 'fund_northwind_iv',
-  fundName: 'Northwind Buyout Fund IV',
-  committed: 300_000,
-  called: 0,
-  distributed: 0,
-  nav: 0,
-  status: 'pending_close',
-  netIrrPct: 0,
-  netMoic: 0,
-  netDpi: 0,
-})
-
-describe('read hooks', () => {
-  it('useSummary loads the portfolio summary', async () => {
-    const fetchMock = routeFetch(() => jsonResponse(200, makeSummary()))
+describe('goal read hooks', () => {
+  it('useOverview loads the headline totals', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(200, makeOverview()))
     const { wrapper } = createQueryWrapper()
 
-    const { result } = renderHook(() => useSummary(), { wrapper })
+    const { result } = renderHook(() => useOverview(), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.totalCommitted).toBe(39_500_000)
-    expect(fetchMock).toHaveBeenCalledWith('/api/portfolio/summary', expect.anything())
+    expect(result.current.data?.value).toBe(17_333)
+    expect(fetchMock).toHaveBeenCalledWith('/api/summary', expect.anything())
   })
 
-  it('useCommitments asks for the largest page plus the filters and sort', async () => {
-    const fetchMock = routeFetch(() => jsonResponse(200, makePage([makeCommitment()])))
+  it('useHistory, usePortfolios and useGoals hand back the rows, not the envelope', async () => {
+    routeFetch(({ path }) => {
+      if (path === '/api/history') return jsonResponse(200, { data: makeHistory(3) })
+      if (path === '/api/portfolios') return jsonResponse(200, makePage([makePortfolio()]))
+      return jsonResponse(200, makePage([makeGoal()]))
+    })
     const { wrapper } = createQueryWrapper()
 
-    const { result } = renderHook(
-      () => useCommitments({ status: 'active', sort: 'nav', order: 'desc' }),
-      { wrapper },
-    )
+    const { result } = renderHook(() => ({ history: useHistory(), portfolios: usePortfolios(), goals: useGoals() }), { wrapper })
+
+    await waitFor(() => expect(result.current.goals.isSuccess && result.current.history.isSuccess && result.current.portfolios.isSuccess).toBe(true))
+    expect(result.current.history.data).toHaveLength(3)
+    expect(result.current.portfolios.data?.[0].name).toBe('Core Growth')
+    expect(result.current.goals.data?.[0].name).toBe('House deposit')
+  })
+
+  it('useActivity sends the filter, sort and page', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(200, makePage([makeActivity()])))
+    const { wrapper } = createQueryWrapper()
+
+    const { result } = renderHook(() => useActivity({ type: 'dividend', sort: 'amount', order: 'asc', page: 2, pageSize: 10 }), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/commitments?pageSize=100&status=active&sort=nav&order=desc',
-      expect.anything(),
-    )
+    expect(fetchMock).toHaveBeenCalledWith('/api/activity?type=dividend&sort=amount&order=asc&page=2&pageSize=10', expect.anything())
   })
 
-  it('useCommitments keeps the current rows on screen while a new sort loads', async () => {
-    const byCommitted = makeCommitment({ id: 'cm_a' })
-    const byNav = makeCommitment({ id: 'cm_b' })
-    const navResponse = deferred<Response>()
-    routeFetch(({ path }) =>
-      path.includes('sort=nav') ? navResponse.promise : jsonResponse(200, makePage([byCommitted])),
-    )
+  it('useActivity keeps the current rows on screen while the next page loads', async () => {
+    const pageOne = makeActivity({ id: 'act_1' })
+    const pageTwo = deferred<Response>()
+    routeFetch(({ path }) => (path.includes('page=2') ? pageTwo.promise : jsonResponse(200, makePage([pageOne]))))
     const { wrapper } = createQueryWrapper()
 
-    const { result, rerender } = renderHook((params: CommitmentListParams) => useCommitments(params), {
+    const { result, rerender } = renderHook((params: ActivityListParams) => useActivity(params), {
       wrapper,
-      initialProps: { sort: 'committed' },
+      initialProps: { page: 1 },
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    rerender({ sort: 'nav' })
+    rerender({ page: 2 })
 
-    // The new sort is still loading, but the old rows stay instead of a skeleton.
     expect(result.current.isPlaceholderData).toBe(true)
-    expect(result.current.data?.data).toEqual([byCommitted])
-
-    navResponse.resolve(jsonResponse(200, makePage([byNav])))
+    expect(result.current.data?.data).toEqual([pageOne])
+    pageTwo.resolve(jsonResponse(200, makePage([makeActivity({ id: 'act_2' })])))
     await waitFor(() => expect(result.current.isPlaceholderData).toBe(false))
-    expect(result.current.data?.data).toEqual([byNav])
-  })
-
-  it('useFunds fetches every fund, not just stage=open', async () => {
-    const fetchMock = routeFetch(() => jsonResponse(200, makePage([makeFund()])))
-    const { wrapper } = createQueryWrapper()
-
-    const { result } = renderHook(() => useFunds(), { wrapper })
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(fetchMock).toHaveBeenCalledWith('/api/funds?pageSize=100', expect.anything())
-  })
-
-  it('useCommitment waits until there is an id to fetch', async () => {
-    const fetchMock = routeFetch(() => jsonResponse(200, makeCommitment({ id: 'cm_0007' })))
-    const { wrapper } = createQueryWrapper()
-
-    const { result, rerender } = renderHook((id: string | null) => useCommitment(id), {
-      wrapper,
-      initialProps: null as string | null,
-    })
-
-    expect(result.current.fetchStatus).toBe('idle')
-    expect(fetchMock).not.toHaveBeenCalled()
-
-    rerender('cm_0007')
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(fetchMock).toHaveBeenCalledWith('/api/commitments/cm_0007', expect.anything())
   })
 })
 
-describe('useCommitToFund', () => {
-  const variables = { fundId: 'fund_northwind_iv', amount: 300_000, acknowledgedTerms: true }
+describe('useCreateGoal', () => {
+  const body = { portfolioId: 'core-growth', name: 'Wedding', target: 15_000, monthlyAmount: 400, acknowledged: true }
 
-  it('posts the amount and acknowledgement, without the fund id in the body', async () => {
-    const fetchMock = routeFetch(() => jsonResponse(201, created))
-    const { wrapper } = createQueryWrapper()
-    const { result } = renderHook(() => useCommitToFund(), { wrapper })
-
-    await act(() => result.current.mutateAsync(variables))
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/funds/fund_northwind_iv/commitments',
-      expect.objectContaining({ method: 'POST', body: JSON.stringify({ amount: 300_000, acknowledgedTerms: true }) }),
-    )
-    // The hook re-renders with its result in a batch just after the mutation resolves.
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(created)
-  })
-
-  it('refreshes the summary and commitments after a successful commit, but not funds', async () => {
-    routeFetch(() => jsonResponse(201, created))
+  it('posts the goal and refreshes the overview and goals', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(201, makeGoal({ id: 'goal_0007', name: 'Wedding', status: 'scheduled' })))
     const { queryClient, wrapper } = createQueryWrapper()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useCommitToFund(), { wrapper })
+    const { result } = renderHook(() => useCreateGoal(), { wrapper })
 
-    await act(() => result.current.mutateAsync(variables))
+    await act(() => result.current.mutateAsync(body))
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['summary'] })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['commitments'] })
-    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['funds'] })
+    expect(fetchMock).toHaveBeenCalledWith('/api/goals', expect.objectContaining({ method: 'POST', body: JSON.stringify(body) }))
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['overview'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['goals'] })
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['portfolios'] })
   })
 
-  it('finishes only after the visible summary has refetched, so the form closes onto fresh numbers', async () => {
-    let summaryRequests = 0
-    routeFetch(({ method, path }) => {
-      if (method === 'POST') return jsonResponse(201, created)
-      if (path === '/api/portfolio/summary') {
-        summaryRequests += 1
-        return jsonResponse(200, makeSummary({ totalCommitted: summaryRequests === 1 ? 39_500_000 : 39_800_000 }))
-      }
-      return jsonResponse(404, { error: 'Unknown API route.' })
-    })
-    const { queryClient, wrapper } = createQueryWrapper()
-    const { result } = renderHook(() => ({ summary: useSummary(), commit: useCommitToFund() }), { wrapper })
-    await waitFor(() => expect(result.current.summary.data?.totalCommitted).toBe(39_500_000))
-
-    let cachedAtResolve: number | undefined
-    await act(async () => {
-      await result.current.commit.mutateAsync(variables)
-      cachedAtResolve = queryClient.getQueryData<{ totalCommitted: number }>(['summary'])?.totalCommitted
-    })
-
-    // The refetched summary is already in the cache the moment the commit resolves,
-    // so whatever renders next (e.g. the form closing) shows the new total.
-    expect(cachedAtResolve).toBe(39_800_000)
-    expect(summaryRequests).toBe(2)
-    await waitFor(() => expect(result.current.summary.data?.totalCommitted).toBe(39_800_000))
-  })
-
-  it('exposes field errors on a 400 and leaves the funds list alone', async () => {
-    routeFetch(() =>
-      jsonResponse(400, {
-        error: 'Please correct the highlighted fields.',
-        fields: { amount: 'Minimum commitment for this fund is $250,000.' },
-      }),
-    )
+  it('refreshes the portfolio list when the portfolio has closed (409)', async () => {
+    routeFetch(() => jsonResponse(409, { error: 'Crypto Pioneers is no longer open to new goals.' }))
     const { queryClient, wrapper } = createQueryWrapper()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useCommitToFund(), { wrapper })
+    const { result } = renderHook(() => useCreateGoal(), { wrapper })
 
     await act(async () => {
-      await result.current.mutateAsync({ ...variables, amount: 1_000 }).catch(() => {})
-    })
-
-    await waitFor(() => expect(result.current.isError).toBe(true))
-    expect(result.current.error).toMatchObject({
-      status: 400,
-      fields: { amount: 'Minimum commitment for this fund is $250,000.' },
-    })
-    expect(invalidate).not.toHaveBeenCalled()
-  })
-
-  it('refreshes the funds list when the fund turns out to be closed (409)', async () => {
-    routeFetch(() => jsonResponse(409, { error: 'Northwind Buyout Fund IV is closed to new commitments.' }))
-    const { queryClient, wrapper } = createQueryWrapper()
-    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useCommitToFund(), { wrapper })
-
-    await act(async () => {
-      await result.current.mutateAsync(variables).catch(() => {})
+      await result.current.mutateAsync(body).catch(() => {})
     })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toMatchObject({ status: 409 })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['funds'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['portfolios'] })
+  })
+})
+
+describe('useUpdateGoal', () => {
+  it('sends only the changed fields, without the id in the body', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(200, makeGoal({ status: 'paused' })))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useUpdateGoal(), { wrapper })
+
+    await act(() => result.current.mutateAsync({ id: 'goal_0001', paused: true }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/goals/goal_0001',
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ paused: true }) }),
+    )
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['overview'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['goals'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['activity'] })
+  })
+
+  it('exposes field errors on a 400 and refreshes nothing', async () => {
+    routeFetch(() => jsonResponse(400, { error: 'Please correct the highlighted fields.', fields: { target: 'Set a target above what’s already saved ($7,140).' } }))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useUpdateGoal(), { wrapper })
+
+    await act(async () => {
+      await result.current.mutateAsync({ id: 'goal_0001', target: 100 }).catch(() => {})
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toMatchObject({ status: 400, fields: { target: expect.stringContaining('above') } })
+    expect(invalidate).not.toHaveBeenCalled()
+  })
+})
+
+describe('useAddMoney', () => {
+  it('posts the amount and refreshes everything a deposit touches', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(201, { goal: makeGoal({ value: 7_390 }), activity: makeActivity({ amount: 250 }) }))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useAddMoney(), { wrapper })
+
+    await act(() => result.current.mutateAsync({ goalId: 'goal_0001', amount: 250 }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/goals/goal_0001/deposits',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ amount: 250 }) }),
+    )
+    for (const key of ['overview', 'history', 'goals', 'activity']) {
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: [key] })
+    }
+  })
+
+  it('finishes only after the overview has refetched, so the drawer closes onto the new total', async () => {
+    let overviewRequests = 0
+    routeFetch(({ method, path }) => {
+      if (method === 'POST') return jsonResponse(201, { goal: makeGoal(), activity: makeActivity() })
+      if (path === '/api/summary') {
+        overviewRequests += 1
+        return jsonResponse(200, makeOverview({ value: overviewRequests === 1 ? 17_333 : 17_583 }))
+      }
+      return jsonResponse(404, { error: 'Endpoint not found.' })
+    })
+    const { queryClient, wrapper } = createQueryWrapper()
+    const { result } = renderHook(() => ({ overview: useOverview(), addMoney: useAddMoney() }), { wrapper })
+    await waitFor(() => expect(result.current.overview.data?.value).toBe(17_333))
+
+    let cachedAtResolve: number | undefined
+    await act(async () => {
+      await result.current.addMoney.mutateAsync({ goalId: 'goal_0001', amount: 250 })
+      cachedAtResolve = queryClient.getQueryData<{ value: number }>(['overview'])?.value
+    })
+
+    expect(cachedAtResolve).toBe(17_583)
+  })
+
+  it('refreshes the goals when the goal is gone (404)', async () => {
+    routeFetch(() => jsonResponse(404, { error: 'Goal not found.' }))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useAddMoney(), { wrapper })
+
+    await act(async () => {
+      await result.current.mutateAsync({ goalId: 'goal_9999', amount: 50 }).catch(() => {})
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['goals'] })
   })
 })
