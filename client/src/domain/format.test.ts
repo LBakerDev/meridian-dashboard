@@ -4,8 +4,11 @@ import {
   formatDate,
   formatMoney,
   formatMoneyCompact,
+  formatMonthYear,
   formatMultiple,
   formatPercent,
+  formatShortDate,
+  formatSignedMoney,
   localizeCurrencyInMessage,
   parseDate,
 } from './format.ts'
@@ -94,5 +97,24 @@ describe('dates', () => {
 
   it('formats as a short date', () => {
     expect(formatDate('2022-09-12')).toBe('Sep 12, 2022')
+  })
+})
+
+describe('goal-based formatting', () => {
+  it('formats a projected month', () => {
+    expect(formatMonthYear(new Date(2028, 9, 1))).toBe('Oct 2028')
+  })
+
+  it('leaves the year off dates in the current year', () => {
+    const today = new Date(2026, 10, 5)
+    expect(formatShortDate('2026-12-01', today)).toBe('Dec 1')
+    expect(formatShortDate('2027-01-01', today)).toBe('Jan 1, 2027')
+  })
+
+  it('signs amounts with a true minus, showing cents only when there are some', () => {
+    expect(formatSignedMoney(250)).toBe('+$250')
+    expect(formatSignedMoney(18.4)).toBe('+$18.40')
+    expect(formatSignedMoney(-9.6)).toBe('−$9.60')
+    expect(formatSignedMoney(0)).toBe('$0')
   })
 })
