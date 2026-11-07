@@ -69,6 +69,8 @@ const goals = seedGoals.map(([name, portfolioId, target, monthlyAmount, months, 
     returnPct: contributed ? round1(((value - contributed) / contributed) * 100) : 0,
     status,
     nextDepositDate: status === 'paused' ? null : nextDeposit,
+    // Monthly deposits made on time, in a row. Pausing holds the count; it isn't reset.
+    streak: status === 'scheduled' ? 0 : months,
     createdAt: isoDate(firstOfMonth(-months)),
   };
 });

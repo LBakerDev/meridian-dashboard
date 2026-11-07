@@ -19,6 +19,9 @@
  *   POST  /api/goals                    { portfolioId, name, target, monthlyAmount, acknowledged }
  *   PATCH /api/goals/:id                { name?, target?, monthlyAmount?, paused? }
  *   POST  /api/goals/:id/deposits       { amount }
+ *   DELETE /api/goals/:id               only a goal with nothing in it (409 otherwise)
+ *   POST  /api/goals/:id/restore        undo a delete
+ *   POST  /api/goals/:id/close          sell and withdraw a funded goal (409 if it's empty)
  *   GET   /api/activity                 ?type=deposit|dividend|fee &goalId= &sort=date|amount &order=asc|desc &page= &pageSize=
  *
  * Lists return { data, meta: { page, pageSize, total, totalPages } }.
@@ -36,6 +39,8 @@ const LATENCY_MS = Number.isFinite(Number(process.env.LATENCY_MS)) ? Number(proc
 const MIN_DEPOSIT = 10;
 const DAILY_DEPOSIT_LIMIT = 10000;
 const MAX_NAME_LENGTH = 40;
+// Never reused, even after a goal is deleted, so Undo can't collide with a newer goal.
+let goalSeq = goals.length;
 
 const app = express();
 app.use(cors());
@@ -141,7 +146,7 @@ app.post('/api/goals', (req, res) => {
   if (Object.keys(fields).length) return badRequest(res, fields);
 
   const goal = {
-    id: `goal_${String(goals.length + 1).padStart(4, '0')}`,
+    id: `goal_${String(++goalSeq).padStart(4, '0')}`,
     name: trimmed,
     portfolioId: portfolio.id,
     portfolioName: portfolio.name,
@@ -228,6 +233,53 @@ app.post('/api/goals/:id/deposits', (req, res) => {
   };
   activity.push(entry);
   res.status(201).json({ goal, activity: entry });
+});
+
+// Deleted goals are kept briefly so "Undo" can put them back where they were.
+const removed = new Map();
+
+app.delete('/api/goals/:id', (req, res) => {
+  const goal = findGoal(req, res);
+  if (!goal) return;
+  if (goal.contributed > 0) {
+    return res.status(409).json({ error: `${goal.name} has money in it. Close it to withdraw instead.` });
+  }
+  const index = goals.indexOf(goal);
+  goals.splice(index, 1);
+  removed.set(goal.id, { goal, index });
+  res.status(204).end();
+});
+
+app.post('/api/goals/:id/restore', (req, res) => {
+  const entry = removed.get(req.params.id);
+  if (!entry) return notFound(res, 'Deleted goal');
+  goals.splice(Math.min(entry.index, goals.length), 0, entry.goal);
+  removed.delete(req.params.id);
+  res.json(entry.goal);
+});
+
+app.post('/api/goals/:id/close', (req, res) => {
+  const goal = findGoal(req, res);
+  if (!goal) return;
+  if (goal.contributed === 0) {
+    return res.status(409).json({ error: `${goal.name} has nothing to withdraw. Delete it instead.` });
+  }
+  const amount = Math.round(goal.value * 100) / 100;
+  goals.splice(goals.indexOf(goal), 1);
+  const last = history.at(-1);
+  last.value = Math.round(last.value - amount);
+  last.contributed -= goal.contributed;
+  const entry = {
+    id: nextActivityId(),
+    date: isoDate(new Date()),
+    type: 'withdrawal',
+    description: `Withdrawal to Chase ••4821 · ${goal.name} closed`,
+    goalId: goal.id,
+    goalName: goal.name,
+    amount: -amount,
+  };
+  activity.push(entry);
+  res.json({ amount, activity: entry });
 });
 
 app.use('/api', (_req, res) => notFound(res, 'Endpoint'));

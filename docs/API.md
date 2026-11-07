@@ -19,9 +19,9 @@ to today, so the data never looks stale.
 | `GET /summary` | `value`, `contributed`, `gain`, `gainPct`, `monthlyTotal` (goals not paused), `nextDepositDate`, `goalCount`, `currency` |
 | `GET /history` | `{ data: [{ month: "2025-12", value, contributed }] }`, 24 months, oldest first |
 | `GET /portfolios` | Portfolios: `id`, `name`, `category`, `risk` (1–5), `minMonthly`, `feePct`, `assumedReturnPct`, `status` (`open` / `closed`), `description`. Filter: `?status=` |
-| `GET /goals` | Goals: `id`, `name`, `portfolioId`, `portfolioName`, `risk`, `target`, `monthlyAmount`, `contributed`, `value`, `returnPct`, `status`, `nextDepositDate`, `createdAt`. Filter: `?status=active\|scheduled\|paused` |
+| `GET /goals` | Goals: `id`, `name`, `portfolioId`, `portfolioName`, `risk`, `target`, `monthlyAmount`, `contributed`, `value`, `returnPct`, `status`, `nextDepositDate`, `streak` (on-time monthly deposits in a row; pausing holds it), `createdAt`. Filter: `?status=active\|scheduled\|paused` |
 | `GET /goals/:id` | One goal, or 404 |
-| `GET /activity` | Deposits, dividends and fees: `id`, `date`, `type`, `description`, `goalId`, `goalName`, `amount` (negative for fees). Query: `type`, `goalId`, `sort=date\|amount`, `order=asc\|desc`, `page`, `pageSize` (default 25, max 100) |
+| `GET /activity` | Deposits, dividends, fees and withdrawals: `id`, `date`, `type`, `description`, `goalId`, `goalName`, `amount` (negative for fees). Query: `type`, `goalId`, `sort=date\|amount`, `order=asc\|desc`, `page`, `pageSize` (default 25, max 100) |
 
 Goal statuses: `scheduled` (created, first deposit not yet made), `active`,
 `paused` (monthly deposits stopped; still invested).
@@ -59,6 +59,23 @@ Any of `name`, `target`, `monthlyAmount`, `paused`.
 - **201:** `{ goal, activity }`. Updates the goal, the totals, the last history point and the activity.
 - **400** `amount`: at least $10, and at most $10,000 a day across one-off deposits. The message says how much is left today.
 - **404:** unknown goal.
+
+### `DELETE /goals/:id`
+
+Deletes a goal **with nothing in it**. **204** on success, **409** if money has
+gone in (close it instead), **404** if unknown. Deleted goals can be restored:
+
+### `POST /goals/:id/restore`
+
+Undo a delete. **200** with the goal, back in its old position; **404** if
+there's nothing to restore.
+
+### `POST /goals/:id/close`
+
+Closes a **funded** goal: its investments are sold and the value withdrawn to
+the linked bank. **200** `{ amount, activity }` (a `withdrawal` entry), and the
+totals and last history point drop accordingly. **409** if the goal is empty
+(delete it instead), **404** if unknown.
 
 ## Sample data
 
