@@ -16,7 +16,7 @@ import {
 /**
  * Two looks, one set of tokens.
  *
- * - Dark (default): near-black surfaces, friendly sans figures, a teal growth
+ * - Dark: near-black surfaces, friendly sans figures, a teal growth
  *   chart and a color per goal. The consumer skin.
  * - Light: warm paper and ink, with monospaced figures, white cards, a deep
  *   teal chart and each goal's color deepened to read on paper.

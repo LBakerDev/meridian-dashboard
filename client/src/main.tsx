@@ -19,8 +19,8 @@ import { cssVariablesResolver, theme } from './theme/theme.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {/* Dark by default; the header toggle switches to light and the choice is remembered. */}
-    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="dark">
+    {/* Follows the device by default; the account menu can pin Light or Dark, and the choice is remembered. */}
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="auto">
       <Notifications position="bottom-right" />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>

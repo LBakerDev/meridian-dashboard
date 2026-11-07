@@ -42,7 +42,7 @@ with realistic, deliberately messy data.
   A month's scheduled deposits share one line ("Monthly deposits · 4 goals ·
   +$1,200") that opens to show each goal's share. Filter by type or goal, with
   the filters kept in the URL; "Show more" loads older days.
-- **Dark by default.** The account menu (the "LB" avatar) switches between Light (warm paper and ink), Dark and System, and remembers the choice.
+- **Follows your device.** Light or dark to match the system setting; the account menu (the "LB" avatar) can pin Light (warm paper and ink) or Dark instead, and remembers the choice.
 
 ## The details that matter
 
