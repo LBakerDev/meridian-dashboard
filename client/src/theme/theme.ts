@@ -18,7 +18,8 @@ import {
  *
  * - Dark (default): near-black surfaces, friendly sans figures, a teal growth
  *   chart and a color per goal. The consumer skin.
- * - Light: warm paper and ink, with monospaced figures.
+ * - Light: warm paper and ink, with monospaced figures, white cards, a deep
+ *   teal chart and each goal's color deepened to read on paper.
  *
  * Components use the `--meridian-*` tokens below rather than raw colors, so they
  * follow whichever scheme is on. Color is otherwise kept for meaning: gain,
@@ -105,11 +106,10 @@ export const theme = createTheme({
  *
  * - gain / loss / pending: meaning colors (lighter in dark mode, for contrast).
  * - card, card-shadow, surface-muted: surfaces.
- * - ink: neutral shapes (goal bars in light mode, activity dots).
+ * - ink: neutral text and shapes.
  * - track: the empty part of a bar.
  * - chart-line / chart-dash / chart-grid: the value chart.
  * - figure-font: numbers. Monospace on paper, the UI sans in dark.
- * - goal-colors: whether goals show their own color (dark) or ink (light).
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
@@ -120,15 +120,15 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
     '--mantine-color-default-border': '#e9e7e1',
     '--mantine-color-error': '#c0392b',
     '--meridian-page': '#fafaf7',
-    '--meridian-card': '#fafaf7',
-    '--meridian-card-shadow': '0 1px 2px rgba(17, 17, 17, 0.04)',
+    '--meridian-card': '#ffffff',
+    '--meridian-card-shadow': '0 1px 2px rgba(17, 17, 17, 0.04), 0 12px 32px -20px rgba(17, 17, 17, 0.16)',
     '--meridian-surface-muted': '#f3f1ec',
     '--meridian-gain': '#0f8a4f',
     '--meridian-loss': '#c0392b',
     '--meridian-pending': '#a8650f',
     '--meridian-ink': '#111111',
     '--meridian-track': '#e9e7e1',
-    '--meridian-chart-line': '#111111',
+    '--meridian-chart-line': '#0f766e',
     '--meridian-chart-fill-opacity': '0.09',
     '--meridian-chart-dash': '#a9a7a1',
     '--meridian-chart-grid': '#e9e7e1',

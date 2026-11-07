@@ -35,9 +35,10 @@
   min-width: 0;
 }
 
-/* A tile with the goal's initial, in the goal's color. Dark mode only; paper stays plain. */
+/* A tile with the goal's initial, in the goal's color. On paper the color is
+   deepened toward ink so light tints (yellow, teal) still read. */
 .icon {
-  display: none;
+  display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -45,11 +46,12 @@
   height: rem(36px);
   border-radius: rem(12px);
   font-weight: 600;
-  color: var(--goal);
-  background-color: color-mix(in srgb, var(--goal) 16%, transparent);
+  color: color-mix(in srgb, var(--goal) 62%, #111);
+  background-color: color-mix(in srgb, var(--goal) 20%, transparent);
 
   @mixin dark {
-    display: inline-flex;
+    color: var(--goal);
+    background-color: color-mix(in srgb, var(--goal) 16%, transparent);
   }
 }
 

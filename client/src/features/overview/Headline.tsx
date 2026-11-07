@@ -1,5 +1,5 @@
 import { Alert, Button, Card, Group, SegmentedControl, Skeleton, Text, Title } from '@mantine/core'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useHistory, useOverview } from '../../api/queries.ts'
 import type { HistoryPoint, Overview } from '../../api/types.ts'
@@ -22,6 +22,12 @@ export function Headline() {
   // The month being scrubbed on the chart, shown in the headline (null: today's totals).
   const [scrubbed, setScrubbed] = useState<HistoryPoint | null>(null)
 
+  // A stable array, so the chart's geometry is reused across headline re-renders.
+  const points = useMemo(
+    () => (history.data ? (range === 'all' ? history.data : history.data.slice(-Number(range))) : []),
+    [history.data, range],
+  )
+
   if (overview.isError) {
     return (
       <Alert color="red" variant="light" title="Couldn't load your investments">
@@ -34,8 +40,6 @@ export function Headline() {
       </Alert>
     )
   }
-
-  const points = history.data ? (range === 'all' ? history.data : history.data.slice(-Number(range))) : []
 
   return (
     <Card component="section" aria-labelledby="investments-heading" className={classes.card}>

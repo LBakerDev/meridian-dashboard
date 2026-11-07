@@ -30,7 +30,7 @@
 /* The growth band between the two lines. */
 .gainBand {
   fill: var(--meridian-gain);
-  fill-opacity: 0.12;
+  fill-opacity: 0.16;
 
   @mixin dark {
     fill-opacity: 0.18;
@@ -86,7 +86,15 @@
   fill: var(--meridian-chart-line);
   transform-box: fill-box;
   transform-origin: center;
-  animation: pulse 2.4s ease-out infinite;
+  /* A few pulses after load, then still. An endless SVG animation repaints the
+     whole chart every frame (SVG parts can't be handed to the GPU). */
+  animation: pulse 2.4s ease-out 1.6s 3 both;
+}
+
+/* No pulse behind the guide line while scrubbing. */
+.svg[data-scrubbing] .pulse {
+  animation: none;
+  opacity: 0;
 }
 
 .cursor {
