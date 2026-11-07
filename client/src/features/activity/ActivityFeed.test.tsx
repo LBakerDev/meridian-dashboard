@@ -5,7 +5,7 @@ import { makeActivity, makeGoal } from '../../test/factories.ts'
 import { requestedPaths, serveApi } from '../../test/fakeApi.ts'
 import { jsonResponse, routeFetch } from '../../test/http.ts'
 import { renderWithProviders } from '../../test/render.tsx'
-import { ActivityFeed } from './ActivityFeed.tsx'
+import { ActivityFeed, INITIAL_DAYS, MORE_DAYS } from './ActivityFeed.tsx'
 
 // Day headings leave off the current year: pin today to Nov 5, 2026.
 beforeEach(() => {
@@ -104,16 +104,25 @@ describe('ActivityFeed', () => {
     expect(screen.getByRole('radio', { name: 'Dividends' })).toBeChecked()
   })
 
-  it('loads more on request, and says when that is everything', async () => {
-    serveApi({ goals, activity: many })
+  it('starts with a few days, shows more on request, and says when that is everything', async () => {
+    const fetchMock = serveApi({ goals, activity: many })
     const { user } = renderWithProviders(<ActivityFeed />)
 
     await screen.findByRole('heading', { level: 3, name: 'Sun, Nov 1' })
-    // The 40th entry's day may continue on the next page, so it's held back.
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(39)
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(INITIAL_DAYS)
+
+    // More days come from what's already loaded first, without another request.
+    await user.click(screen.getByRole('button', { name: 'Show more' }))
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(INITIAL_DAYS + MORE_DAYS)
+    expect(activityRequests(fetchMock)).toHaveLength(1)
 
     await user.click(screen.getByRole('button', { name: 'Show more' }))
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(25)
+    await user.click(screen.getByRole('button', { name: 'Show more' }))
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(35)
 
+    // The first page (40 entries) runs out here, so this one fetches the rest.
+    await user.click(screen.getByRole('button', { name: 'Show more' }))
     expect(await screen.findByText("That's everything")).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(45)
   })

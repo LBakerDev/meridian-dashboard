@@ -37,6 +37,10 @@ const EMPTY_TEXT: Record<ActivityType, string> = {
 
 const ALL_GOALS = 'all'
 
+/** Days shown at first, and how many more each "Show more" adds. */
+export const INITIAL_DAYS = 5
+export const MORE_DAYS = 10
+
 /**
  * Everything that's happened, newest first, grouped by day. Each month's
  * scheduled deposits share one line that opens to show each goal's share.
@@ -53,7 +57,20 @@ export function ActivityFeed() {
 
   const feed = useActivityFeed({ type: params.type ?? undefined, goalId: goalId ?? undefined })
   const rows = feed.data?.pages.flatMap((page) => page.data) ?? []
-  const days = groupActivity(rows, { complete: !feed.hasNextPage })
+  const allDays = groupActivity(rows, { complete: !feed.hasNextPage })
+
+  // A short feed by default; "Show more" reveals more days, fetching only when
+  // what's loaded runs out. A new filter starts short again.
+  const filterKey = `${params.type}|${goalId}`
+  const [shown, setShown] = useState({ key: filterKey, days: INITIAL_DAYS })
+  const visibleDays = shown.key === filterKey ? shown.days : INITIAL_DAYS
+  const days = allDays.slice(0, visibleDays)
+  const hasMore = allDays.length > visibleDays || feed.hasNextPage
+  const showMore = () => {
+    const next = visibleDays + MORE_DAYS
+    setShown({ key: filterKey, days: next })
+    if (feed.hasNextPage && allDays.length < next) feed.fetchNextPage()
+  }
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const toggle = (key: string) =>
@@ -153,8 +170,8 @@ export function ActivityFeed() {
 
       {!feed.isError && days.length > 0 && (
         <div className={classes.footer}>
-          {feed.hasNextPage ? (
-            <Button size="xs" variant="default" radius="xl" onClick={() => feed.fetchNextPage()} loading={feed.isFetchingNextPage}>
+          {hasMore ? (
+            <Button size="xs" variant="default" radius="xl" onClick={showMore} loading={feed.isFetchingNextPage}>
               Show more
             </Button>
           ) : (
