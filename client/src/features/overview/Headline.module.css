@@ -47,11 +47,16 @@
 
 .chartArea {
   margin-top: rem(16px);
-  min-height: rem(220px);
+  min-height: rem(240px);
 }
 
 .chartError {
-  height: rem(220px);
+  height: rem(240px);
+}
+
+/* Holds its width as it switches between "all time" and "in Mar 2026", so the pill doesn't shift. */
+.when {
+  min-width: rem(84px);
 }
 
 .legend {
@@ -68,6 +73,12 @@
 
 .swatch[data-line='value'] {
   border-top: 2px solid var(--meridian-chart-line);
+}
+
+.swatch[data-line='growth'] {
+  height: rem(8px);
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--meridian-gain) 30%, transparent);
 }
 
 .swatch[data-line='contributed'] {

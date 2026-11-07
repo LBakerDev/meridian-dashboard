@@ -16,9 +16,10 @@ with realistic, deliberately messy data.
 ## What it does
 
 - **Your investments.** The total, the all-time gain as a pill
-  ("▲ $1,883 · 12.2%"), and a chart of value against what you put in. The gap
-  between the lines is your growth. Switch 6M / 1Y / All. Hover, or focus the
-  chart and use the arrow keys, to read any month.
+  ("▲ $1,883 · 12.2%"), and a chart of value against what you put in, with the
+  gap between the lines shaded as your growth. Scrub across the chart (mouse or
+  arrow keys) and the headline shows that month; let go and it returns to today.
+  The line draws in on load, and switches between 6M / 1Y / All.
 - **Goals.** Each with its portfolio, a 1–5 risk level, its monthly amount, a
   progress bar, and a projection: "On track for Oct 2028". Goals that haven't
   started say when they will; paused goals say so.

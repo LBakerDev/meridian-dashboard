@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { makeHistory, makeOverview } from '../../test/factories.ts'
@@ -46,6 +46,25 @@ describe('Headline', () => {
     await user.click(screen.getByRole('radio', { name: 'All' }))
 
     expect(screen.getByRole('img', { name: /in December 2024 to .* in November 2026/ })).toBeInTheDocument()
+  })
+
+  it("shows the scrubbed month's value and gain in the headline, then returns to today", async () => {
+    // makeHistory(12): Oct 2026 has $11,000 put in and is worth $12,100.
+    serveApi({ overview: makeOverview({ value: 17_333 }), history: makeHistory(12) })
+    renderWithProviders(<Headline />)
+    const chart = await screen.findByRole('img', { name: /Use the arrow keys/ })
+
+    fireEvent.focus(chart)
+    fireEvent.keyDown(chart, { key: 'ArrowLeft' })
+
+    expect(screen.getByText('$12,100')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Up $1,100, 10.0% in Oct 2026' })).toBeInTheDocument()
+    expect(screen.getByText('in Oct 2026')).toBeInTheDocument()
+
+    fireEvent.keyDown(chart, { key: 'Escape' })
+
+    expect(screen.getByText('$17,333')).toBeInTheDocument()
+    expect(screen.getByText('all time')).toBeInTheDocument()
   })
 
   it('offers a retry when the totals fail to load', async () => {

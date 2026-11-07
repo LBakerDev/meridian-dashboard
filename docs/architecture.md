@@ -276,6 +276,6 @@ render.yaml               one-service deploy
 | TanStack Query, no global store | Server data is the only shared state | Learning curve for newcomers |
 | Activity view in the URL | Refresh and share keep the view | A small parse/write module to maintain |
 | Writes resolve after the refetch | Drawers close onto correct numbers | A write takes one extra round trip |
-| Hand-built SVG chart | Small, themable, keyboard-accessible | Axis and tooltip logic is ours to maintain |
+| Hand-built SVG chart | Small, themable, keyboard-accessible; scrubbing drives the headline | Axis, scale and scrubbing logic is ours to maintain |
 | Client checks repeat the server's rules | Instant feedback | Rules can drift; server errors still land in the same place |
 | In-memory mock data | Zero setup to run | Shared by all visitors; resets on restart |

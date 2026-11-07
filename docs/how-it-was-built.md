@@ -78,7 +78,7 @@ direction, judged every screen, ran the tests and made each commit myself.
 - **Client-side checks repeat the server's rules,** for instant feedback.
   Server errors still land in the same places if the rules drift.
 - **A hand-built chart** instead of a library: smaller and fully themable, at
-  the cost of writing the axis and tooltip logic myself.
+  the cost of writing the axis, scale and scrubbing logic myself.
 
 ## Next
 
