@@ -2,6 +2,7 @@ import { buildQuery, request } from './client.ts'
 import type {
   Activity,
   ActivityListParams,
+  CloseResult,
   DepositResult,
   Goal,
   GoalUpdate,
@@ -31,6 +32,13 @@ export const api = {
 
   addMoney: (id: string, amount: number | null) =>
     request<DepositResult>(`/goals/${encodeURIComponent(id)}/deposits`, { method: 'POST', body: { amount } }),
+
+  /** Only for a goal with nothing in it; a funded goal is closed instead. */
+  deleteGoal: (id: string) => request<null>(`/goals/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  restoreGoal: (id: string) => request<Goal>(`/goals/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
+
+  closeGoal: (id: string) => request<CloseResult>(`/goals/${encodeURIComponent(id)}/close`, { method: 'POST' }),
 
   listActivity: (params: ActivityListParams = {}, signal?: AbortSignal) =>
     request<Paginated<Activity>>(`/activity${buildQuery({ ...params })}`, { signal }),

@@ -36,6 +36,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     returnPct: 19,
     status: 'active',
     nextDepositDate: '2026-12-01',
+    streak: 12,
     createdAt: '2025-11-01',
     ...overrides,
   }

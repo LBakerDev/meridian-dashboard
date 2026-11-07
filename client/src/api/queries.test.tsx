@@ -7,11 +7,14 @@ import { createQueryWrapper } from '../test/queryWrapper.tsx'
 import {
   useActivity,
   useAddMoney,
+  useCloseGoal,
   useCreateGoal,
+  useDeleteGoal,
   useGoals,
   useHistory,
   useOverview,
   usePortfolios,
+  useRestoreGoal,
   useUpdateGoal,
 } from './queries.ts'
 import type { ActivityListParams } from './types.ts'
@@ -195,5 +198,58 @@ describe('useAddMoney', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['goals'] })
+  })
+})
+
+describe('removing goals', () => {
+  const everything = ['overview', 'history', 'goals', 'activity']
+
+  it('useDeleteGoal sends DELETE and refreshes everything a goal touches', async () => {
+    const fetchMock = routeFetch(() => new Response(null, { status: 204 }))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useDeleteGoal(), { wrapper })
+
+    await act(() => result.current.mutateAsync('goal_0006'))
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/goals/goal_0006', expect.objectContaining({ method: 'DELETE' }))
+    for (const key of everything) expect(invalidate).toHaveBeenCalledWith({ queryKey: [key] })
+  })
+
+  it('useDeleteGoal refreshes the goals when the server refuses (money arrived meanwhile)', async () => {
+    routeFetch(() => jsonResponse(409, { error: 'Japan trip has money in it. Close it to withdraw instead.' }))
+    const { queryClient, wrapper } = createQueryWrapper()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useDeleteGoal(), { wrapper })
+
+    await act(async () => {
+      await result.current.mutateAsync('goal_0006').catch(() => {})
+    })
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['goals'] })
+  })
+
+  it('useRestoreGoal brings a deleted goal back', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(200, makeGoal({ id: 'goal_0006' })))
+    const { wrapper } = createQueryWrapper()
+    const { result } = renderHook(() => useRestoreGoal(), { wrapper })
+
+    await act(() => result.current.mutateAsync('goal_0006'))
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/goals/goal_0006/restore', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('useCloseGoal posts the close and returns the amount withdrawn', async () => {
+    const fetchMock = routeFetch(() => jsonResponse(200, { amount: 7_140, activity: makeActivity({ type: 'withdrawal', amount: -7_140 }) }))
+    const { wrapper } = createQueryWrapper()
+    const { result } = renderHook(() => useCloseGoal(), { wrapper })
+
+    let amount: number | undefined
+    await act(async () => {
+      amount = (await result.current.mutateAsync('goal_0001')).amount
+    })
+
+    expect(amount).toBe(7_140)
+    expect(fetchMock).toHaveBeenCalledWith('/api/goals/goal_0001/close', expect.objectContaining({ method: 'POST' }))
   })
 })

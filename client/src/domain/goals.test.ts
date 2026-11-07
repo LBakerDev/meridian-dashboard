@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { makeGoal } from '../test/factories.ts'
-import { GOAL_COLORS, goalColor, hasStarted, progress, project, projectGoal, riskLabel } from './goals.ts'
+import { crossedMilestone, GOAL_COLORS, goalColor, hasStarted, milestoneMessage, progress, project, projectGoal, riskLabel } from './goals.ts'
 
 const today = new Date(2026, 10, 5) // Nov 5, 2026
 
@@ -82,5 +82,30 @@ describe('goalColor', () => {
   it('spreads goals across the palette', () => {
     const colors = new Set(['goal_0001', 'goal_0002', 'goal_0003', 'goal_0004', 'goal_0005'].map(goalColor))
     expect(colors.size).toBeGreaterThan(2)
+  })
+})
+
+describe('crossedMilestone', () => {
+  it('names the milestone a deposit crossed', () => {
+    expect(crossedMilestone(0.43, 0.53)).toBe(0.5)
+    expect(crossedMilestone(0.2, 0.25)).toBe(0.25) // landing exactly on it counts
+  })
+
+  it('picks the highest when one deposit jumps several', () => {
+    expect(crossedMilestone(0.2, 0.8)).toBe(0.75)
+    expect(crossedMilestone(0.9, 1)).toBe(1)
+  })
+
+  it('is null when nothing was crossed, or progress went down', () => {
+    expect(crossedMilestone(0.3, 0.4)).toBeNull()
+    expect(crossedMilestone(0.6, 0.4)).toBeNull()
+  })
+})
+
+describe('milestoneMessage', () => {
+  it('reads naturally for each milestone', () => {
+    expect(milestoneMessage(0.25, 'Travel')).toBe('A quarter of the way to Travel')
+    expect(milestoneMessage(0.5, 'Travel')).toBe('Halfway to Travel')
+    expect(milestoneMessage(1, 'Travel')).toBe('Travel: target reached')
   })
 })

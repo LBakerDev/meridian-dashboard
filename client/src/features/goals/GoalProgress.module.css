@@ -1,0 +1,79 @@
+.bar {
+  position: relative;
+  height: rem(6px);
+  border-radius: 999px;
+  background-color: var(--meridian-track);
+  overflow: hidden;
+
+  @mixin dark {
+    height: rem(8px);
+  }
+}
+
+.bar[data-size='md'] {
+  height: rem(8px);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--meridian-ink);
+  transition: width 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  @mixin dark {
+    background-color: var(--goal, var(--meridian-ink));
+  }
+}
+
+/* Quarter notches: gaps in the bar, so the next milestone is visible at a glance. */
+.notch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--meridian-card);
+}
+
+/* A milestone just crossed: a brief glow on the bar, a flash on that notch. */
+.bar[data-celebrate] {
+  overflow: visible;
+  animation: glow 1.8s ease-out 0.6s both;
+}
+
+.notch[data-just] {
+  animation: flash 1.4s ease-out 0.7s both;
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  35% {
+    box-shadow: 0 0 16px 2px color-mix(in srgb, var(--goal, var(--meridian-ink)) 70%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes flash {
+  30% {
+    background-color: #fff;
+    transform: scaleY(1.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+
+  .bar[data-celebrate],
+  .notch[data-just] {
+    animation: none;
+  }
+}

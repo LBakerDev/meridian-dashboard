@@ -1,23 +1,22 @@
-import { Button, Checkbox, Group, NumberInput, Stack, Text, TextInput } from '@mantine/core'
+import { Button, Checkbox, Group, NumberInput, Stack, Text } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 
+import { isApiError } from '../../api/client.ts'
 import { useCreateGoal } from '../../api/queries.ts'
 import type { Goal, Portfolio } from '../../api/types.ts'
+import { ACCOUNT } from '../../domain/account.ts'
 import { formatMoney, formatMonthYear, formatShortDate } from '../../domain/format.ts'
 import { project } from '../../domain/goals.ts'
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
-import { RiskDots } from '../shared/RiskDots.tsx'
 import classes from './drawers.module.css'
+import type { Basics } from './GoalBasics.tsx'
 
 export const MAX_NAME_LENGTH = 40
 export const MAX_MONTHLY = 10_000
-const FIELDS = ['name', 'target', 'monthlyAmount', 'acknowledged'] as const
 
 interface FormValues {
-  name: string
-  target: number | string
   monthlyAmount: number | string
   acknowledged: boolean
 }
@@ -25,24 +24,23 @@ interface FormValues {
 const asNumber = (value: number | string) => (typeof value === 'number' ? value : null)
 
 interface NewGoalFormProps {
+  basics: Basics
   portfolio: Portfolio
   onCreated: (goal: Goal) => void
   onChangePortfolio: () => void
+  onEditBasics: () => void
   onCancel: () => void
 }
 
-/** Step two of a new goal: name it, set a target and a monthly amount, see when you'd get there. */
-export function NewGoalForm({ portfolio, onCreated, onChangePortfolio, onCancel }: NewGoalFormProps) {
+/** Step three of a new goal: how much each month, when you'd get there, and confirm. */
+export function NewGoalForm({ basics, portfolio, onCreated, onChangePortfolio, onEditBasics, onCancel }: NewGoalFormProps) {
   const createGoal = useCreateGoal()
   const [problem, setProblem] = useState<FormProblem | null>(null)
 
   // Mirrors the server's rules so most mistakes are caught before sending.
   const form = useForm<FormValues>({
-    initialValues: { name: '', target: '', monthlyAmount: '', acknowledged: false },
+    initialValues: { monthlyAmount: '', acknowledged: false },
     validate: {
-      name: (value) =>
-        !value.trim() ? 'Give your goal a name.' : value.trim().length > MAX_NAME_LENGTH ? `Keep the name under ${MAX_NAME_LENGTH} characters.` : null,
-      target: (value) => (asNumber(value) === null || (value as number) < 100 ? 'Set a target of at least $100.' : null),
       monthlyAmount: (value) => {
         const amount = asNumber(value)
         if (amount === null) return 'Enter a monthly amount.'
@@ -54,10 +52,8 @@ export function NewGoalForm({ portfolio, onCreated, onChangePortfolio, onCancel 
     },
   })
 
-  const target = asNumber(form.values.target)
   const monthly = asNumber(form.values.monthlyAmount)
-  const projection =
-    target && monthly ? project({ value: 0, monthly, target, annualReturnPct: portfolio.assumedReturnPct }) : null
+  const projection = monthly ? project({ value: 0, monthly, target: basics.target, annualReturnPct: portfolio.assumedReturnPct }) : null
 
   const submit = form.onSubmit(async (values) => {
     if (createGoal.isPending) return
@@ -65,20 +61,26 @@ export function NewGoalForm({ portfolio, onCreated, onChangePortfolio, onCancel 
     try {
       const goal = await createGoal.mutateAsync({
         portfolioId: portfolio.id,
-        name: values.name.trim(),
-        target: asNumber(values.target),
+        name: basics.name,
+        target: basics.target,
         monthlyAmount: asNumber(values.monthlyAmount),
         acknowledged: values.acknowledged,
       })
       notifications.show({
-        title: 'Goal created',
-        message: `${goal.name}${goal.nextDepositDate ? ` · first deposit ${formatShortDate(goal.nextDepositDate)}` : ''}`,
+        title: `${goal.name} created`,
+        message: goal.nextDepositDate ? `First deposit ${formatShortDate(goal.nextDepositDate)}` : 'Deposits start next month.',
       })
       onCreated(goal)
     } catch (error) {
+      // The name and target were set in step one, so their errors send you back there.
+      const detailErrors = isApiError(error) ? ['name', 'target'].map((f) => error.fields[f]).filter(Boolean) : []
+      if (isApiError(error) && error.status === 400 && detailErrors.length) {
+        setProblem({ title: 'Check your goal details', message: detailErrors.join(' '), recover: { label: 'Edit goal details', onClick: onEditBasics } })
+        return
+      }
       setProblem(
         toFormProblem(error, {
-          fields: FIELDS,
+          fields: ['monthlyAmount', 'acknowledged'],
           setFieldErrors: form.setErrors,
           gone: { title: 'This portfolio is no longer available', recover: { label: 'Choose another portfolio', onClick: onChangePortfolio } },
         }),
@@ -89,40 +91,24 @@ export function NewGoalForm({ portfolio, onCreated, onChangePortfolio, onCancel 
   return (
     <form onSubmit={submit} noValidate>
       <Stack gap="md">
-        <div className={classes.picked}>
-          <Group justify="space-between" wrap="nowrap" gap="sm">
-            <Text fw={600} lineClamp={2}>
-              {portfolio.name}
-            </Text>
-            <RiskDots risk={portfolio.risk} />
-          </Group>
-          <Text size="sm" c="dimmed" mt={6}>
-            {portfolio.description} {portfolio.feePct}% a year.
-          </Text>
-        </div>
-
-        <TextInput data-autofocus label="What's it for?" placeholder="e.g. Wedding" maxLength={60} {...form.getInputProps('name')} />
-
-        <Group grow align="flex-start">
-          <NumberInput label="Target" prefix="$" min={0} {...form.getInputProps('target')} />
-          <NumberInput
-            label="Each month"
-            description={`From ${formatMoney(portfolio.minMonthly)}`}
-            prefix="$"
-            min={0}
-            {...form.getInputProps('monthlyAmount')}
-          />
-        </Group>
+        <NumberInput
+          data-autofocus
+          label="Each month"
+          description={`From ${formatMoney(portfolio.minMonthly)}`}
+          prefix="$"
+          min={0}
+          {...form.getInputProps('monthlyAmount')}
+        />
 
         <div className={classes.projection} aria-live="polite">
-          {projection?.reachedOn && target && monthly ? (
+          {projection?.reachedOn && monthly ? (
             <Text size="sm">
               At <span className={classes.figure}>{formatMoney(monthly)}</span> a month you'd reach{' '}
-              <span className={classes.figure}>{formatMoney(target)}</span> around <b>{formatMonthYear(projection.reachedOn)}</b>.
+              <span className={classes.figure}>{formatMoney(basics.target)}</span> around <b>{formatMonthYear(projection.reachedOn)}</b>.
             </Text>
           ) : (
             <Text size="sm" c="dimmed">
-              Enter a target and a monthly amount to see when you'd get there.
+              Enter a monthly amount to see when you'd get there.
             </Text>
           )}
           <Text size="xs" c="dimmed" mt={4}>
@@ -133,8 +119,8 @@ export function NewGoalForm({ portfolio, onCreated, onChangePortfolio, onCancel 
         <Checkbox
           label={
             monthly
-              ? `Take ${formatMoney(monthly)} from Chase ••4821 on the 1st of each month`
-              : 'Take the monthly amount from Chase ••4821 on the 1st of each month'
+              ? `Take ${formatMoney(monthly)} from ${ACCOUNT.bank} on the 1st of each month`
+              : `Take the monthly amount from ${ACCOUNT.bank} on the 1st of each month`
           }
           {...form.getInputProps('acknowledged', { type: 'checkbox' })}
         />

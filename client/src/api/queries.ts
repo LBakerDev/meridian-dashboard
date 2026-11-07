@@ -128,3 +128,42 @@ export function useAddMoney() {
     },
   })
 }
+
+/** Everything a goal disappearing (or coming back) can change. */
+function refreshAfterGoalRemoval(queryClient: ReturnType<typeof useQueryClient>) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.overview }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.history }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.goals.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.activity.all }),
+  ])
+}
+
+/** Delete a goal that has nothing in it. Pair with useRestoreGoal for Undo. */
+export function useDeleteGoal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.deleteGoal(id),
+    onSuccess: () => refreshAfterGoalRemoval(queryClient),
+    // 409: money arrived since the page loaded; 404: already gone. Either way the list is stale.
+    onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.goals.all }),
+  })
+}
+
+export function useRestoreGoal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.restoreGoal(id),
+    onSuccess: () => refreshAfterGoalRemoval(queryClient),
+  })
+}
+
+/** Close a funded goal: sell its investments and withdraw the value. */
+export function useCloseGoal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.closeGoal(id),
+    onSuccess: () => refreshAfterGoalRemoval(queryClient),
+    onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.goals.all }),
+  })
+}

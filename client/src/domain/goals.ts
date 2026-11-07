@@ -5,6 +5,26 @@ import type { Goal, RiskLevel } from '../api/types.ts'
  * rendering anything.
  */
 
+/** Progress checkpoints shown as notches on each goal's bar, as shares of the target. */
+export const MILESTONES = [0.25, 0.5, 0.75] as const
+
+/**
+ * The milestone a change in progress crossed (0.25, 0.5, 0.75, or 1 for the target
+ * itself), or null. If one deposit jumps several, the highest wins. Only ever
+ * celebrates the user's own progress, never market moves.
+ */
+export function crossedMilestone(before: number, after: number): number | null {
+  const crossed = [...MILESTONES, 1].filter((m) => before < m && after >= m)
+  return crossed.length ? crossed[crossed.length - 1] : null
+}
+
+/** "Halfway to House deposit". */
+export function milestoneMessage(milestone: number, goalName: string): string {
+  if (milestone >= 1) return `${goalName}: target reached`
+  const words: Record<number, string> = { 0.25: 'A quarter of the way', 0.5: 'Halfway', 0.75: 'Three-quarters of the way' }
+  return `${words[milestone]} to ${goalName}`
+}
+
 /** Projections stop looking after this long ("more than 50 years" isn't useful). */
 const MAX_MONTHS = 600
 

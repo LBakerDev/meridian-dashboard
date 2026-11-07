@@ -28,8 +28,16 @@ with realistic, deliberately messy data.
     "This moves House deposit from Oct 2028 to Sep 2028."
   - **Edit:** rename, change the target or monthly amount, or pause deposits,
     with the new date shown against the old one before you save.
-- **New goal.** Pick a portfolio, name the goal, set a target and a monthly
-  amount, and see when you'd get there as you type.
+- **New goal,** in three labelled steps: what you're saving for (with quick
+  picks), how it's invested (each portfolio explained, with a good default), and
+  how much each month, with a live projection.
+- **Earned moments, not gamification.** Each bar has quarter notches; a deposit
+  that crosses one gets a brief glow and "Halfway to House deposit". Each goal
+  counts its on-time months in a row, and pausing holds the count rather than
+  breaking it. Nothing celebrates market moves.
+- **Delete or close.** A goal with nothing in it can be deleted, with Undo. A
+  funded goal is closed instead, after a confirmation that spells out the sale
+  and withdrawal.
 - **Activity.** Every deposit, dividend and fee. Filter, sort and page, with
   the view kept in the URL. Columns never shift.
 - **Dark by default.** The account menu (the "LB" avatar) switches between Light (warm paper and ink), Dark and System, and remembers the choice.

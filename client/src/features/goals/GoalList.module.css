@@ -73,27 +73,8 @@
   flex-shrink: 0;
 }
 
-.bar {
-  height: rem(6px);
+.progress {
   margin-top: rem(12px);
-  border-radius: 999px;
-  background-color: var(--meridian-track);
-  overflow: hidden;
-
-  @mixin dark {
-    height: rem(8px);
-  }
-}
-
-.bar > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background-color: var(--meridian-ink);
-
-  @mixin dark {
-    background-color: var(--goal);
-  }
 }
 
 .side {

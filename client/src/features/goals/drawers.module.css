@@ -75,22 +75,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-.bar {
-  height: rem(8px);
-  border-radius: 999px;
-  background-color: var(--meridian-track);
-  overflow: hidden;
+.streak {
+  display: flex;
+  align-items: center;
+  gap: rem(6px);
 }
 
-.bar > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background-color: var(--meridian-ink);
-
-  @mixin dark {
-    background-color: var(--goal);
-  }
+.streakDot {
+  width: rem(6px);
+  height: rem(6px);
+  border-radius: 50%;
+  background-color: var(--goal, var(--meridian-gain));
 }
 
 .gain {
@@ -113,4 +108,24 @@
   gap: rem(12px);
   padding: rem(10px) 0;
   border-top: 1px solid var(--mantine-color-default-border);
+}
+
+/* Delete / close: separated from everyday actions. */
+.danger {
+  margin-top: rem(8px);
+  padding-top: rem(12px);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.tag {
+  vertical-align: middle;
+}
+
+/* "Step 1 of 3" above each New goal step. */
+.stepCount {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(11px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
 }

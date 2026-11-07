@@ -1,13 +1,7 @@
 import { Avatar, Menu, SegmentedControl, Stack, Text, UnstyledButton, useMantineColorScheme, type MantineColorScheme } from '@mantine/core'
 
+import { ACCOUNT } from '../domain/account.ts'
 import classes from './AccountMenu.module.css'
-
-/** The demo's account holder. All data in Meridian is sample data. */
-export const ACCOUNT = {
-  name: 'London Baker',
-  initials: 'LB',
-  bank: 'Chase ••4821',
-}
 
 const SCHEMES: { label: string; value: MantineColorScheme }[] = [
   { label: 'Light', value: 'light' },

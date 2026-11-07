@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Skeleton, Text, UnstyledButton } from '@mantine/core'
+import { Alert, Badge, Button, Group, Skeleton, Text, UnstyledButton } from '@mantine/core'
 
 import { usePortfolios } from '../../api/queries.ts'
 import type { Portfolio } from '../../api/types.ts'
@@ -6,7 +6,10 @@ import { formatMoney } from '../../domain/format.ts'
 import { RiskDots } from '../shared/RiskDots.tsx'
 import classes from './drawers.module.css'
 
-/** Step one of a new goal: where the money goes. Closed portfolios aren't offered. */
+/** A middle-of-the-road choice, flagged for people who aren't sure. */
+const RECOMMENDED = 'balanced-60-40'
+
+/** Step two of a new goal: where the money goes. Closed portfolios aren't offered. */
 export function PortfolioPicker({ onSelect, selectedId = null }: { onSelect: (portfolio: Portfolio) => void; selectedId?: string | null }) {
   const portfolios = usePortfolios()
 
@@ -50,10 +53,18 @@ export function PortfolioPicker({ onSelect, selectedId = null }: { onSelect: (po
             <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
               <Text fw={500} lineClamp={2} title={portfolio.name}>
                 {portfolio.name}
+                {portfolio.id === RECOMMENDED && (
+                  <Badge size="xs" variant="light" ml={8} className={classes.tag}>
+                    Good default
+                  </Badge>
+                )}
               </Text>
               <RiskDots risk={portfolio.risk} />
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
+              {portfolio.description}
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
               {portfolio.category} · from <span className={classes.figure}>{formatMoney(portfolio.minMonthly)}</span>/mo ·{' '}
               <span className={classes.figure}>{portfolio.feePct}%</span> a year
             </Text>

@@ -7,6 +7,7 @@ import { formatMoney, formatMonthYear, formatPercent, formatShortDate } from '..
 import { goalColor, hasStarted, progress, projectGoal } from '../../domain/goals.ts'
 import { RiskDots } from '../shared/RiskDots.tsx'
 import classes from './GoalList.module.css'
+import { GoalProgress } from './GoalProgress.tsx'
 
 interface GoalListProps {
   onOpenGoal: (goalId: string) => void
@@ -119,8 +120,8 @@ function GoalRow({ goal, assumedReturn, onOpen }: { goal: Goal; assumedReturn: n
             </Text>
           </div>
         </Group>
-        <div className={classes.bar} aria-hidden="true">
-          <span style={{ width: `${share * 100}%` }} />
+        <div className={classes.progress}>
+          <GoalProgress share={share} size="sm" />
         </div>
         <Group justify="space-between" gap="sm" mt={6}>
           <Text size="xs" c="dimmed">

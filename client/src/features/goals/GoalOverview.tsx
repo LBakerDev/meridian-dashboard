@@ -6,18 +6,26 @@ import { formatMoney, formatPercent, formatShortDate, formatSignedMoney } from '
 import { goalColor, hasStarted, progress } from '../../domain/goals.ts'
 import { useCountUp } from '../../hooks/useCountUp.ts'
 import { RiskDots } from '../shared/RiskDots.tsx'
+import { GoalProgress } from './GoalProgress.tsx'
 import classes from './drawers.module.css'
 import { goalStatusText } from './GoalList.tsx'
+
+/** What just happened, so the bar can grow from where it was and celebrate a milestone. */
+export interface Arrival {
+  from: number
+  milestone: number | null
+}
 
 interface GoalOverviewProps {
   goal: Goal
   assumedReturn: number | undefined
   onAddMoney: () => void
   onEdit: () => void
+  arrival?: Arrival | null
 }
 
 /** A goal at a glance, its two actions, and its latest activity. */
-export function GoalOverview({ goal, assumedReturn, onAddMoney, onEdit }: GoalOverviewProps) {
+export function GoalOverview({ goal, assumedReturn, onAddMoney, onEdit, arrival = null }: GoalOverviewProps) {
   const recent = useActivity({ goalId: goal.id, pageSize: 5 })
   // Ticks up to the new value after "Add money".
   const shownValue = useCountUp(goal.value)
@@ -54,16 +62,8 @@ export function GoalOverview({ goal, assumedReturn, onAddMoney, onEdit }: GoalOv
           </Text>
         )}
 
-        <div
-          className={classes.bar}
-          style={{ marginTop: 16 }}
-          role="progressbar"
-          aria-label="Progress to target"
-          aria-valuenow={Math.round(share * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <span style={{ width: `${share * 100}%` }} />
+        <div style={{ marginTop: 16 }}>
+          <GoalProgress share={share} from={arrival?.from} celebrate={arrival?.milestone} label="Progress to target" />
         </div>
         <Group justify="space-between" mt={6} gap="sm">
           <Text size="xs" c="dimmed">
@@ -80,6 +80,16 @@ export function GoalOverview({ goal, assumedReturn, onAddMoney, onEdit }: GoalOv
           <span className={classes.figure}>{formatMoney(goal.monthlyAmount)}</span> a month
           {goal.status === 'paused' ? ' · paused' : goal.nextDepositDate ? ` · next on ${formatShortDate(goal.nextDepositDate)}` : ''}
         </Text>
+        {goal.streak > 0 && (
+          // Consistency is the habit worth noticing. Pausing holds the count rather than breaking it.
+          <Text size="xs" c="dimmed" mt={8} className={classes.streak}>
+            <span className={classes.streakDot} aria-hidden="true" />
+            <Text span size="xs" fw={600} c="var(--mantine-color-text)">
+              {goal.streak} {goal.streak === 1 ? 'month' : 'months'} in a row
+            </Text>{' '}
+            on time{goal.status === 'paused' ? ' · held while paused' : ''}
+          </Text>
+        )}
       </div>
 
       <Group grow gap="sm">

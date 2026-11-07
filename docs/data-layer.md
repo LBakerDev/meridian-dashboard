@@ -67,6 +67,7 @@ overwrite a newer one.
 | `useCreateGoal` | overview, goals |
 | `useUpdateGoal` | overview (monthly total), goals, activity (a rename shows there) |
 | `useAddMoney` | overview, history (the chart), goals, activity |
+| `useDeleteGoal`, `useRestoreGoal`, `useCloseGoal` | overview, history, goals, activity |
 
 Each write finishes only after those refetches, so a drawer closes onto the new
 numbers, and the count-up animates the total to its new value.
@@ -92,5 +93,6 @@ Plain functions, no React, no fetching, each unit-tested.
 | `progress(goal)` | Value toward target, capped at 100%, safe with a zero target. |
 | `project(…)` / `projectGoal(goal, rate)` | "On track for Oct 2028": monthly deposits plus the portfolio's assumed return. Paused goals only grow; no date when there's no way to get there; stops at 50 years. Also drives "this moves your date from Oct to Sep" in Add money and Edit. |
 | `riskLabel(risk)` | "Higher risk" for screen readers alongside the risk dots. |
+| `crossedMilestone(before, after)` | Which milestone (25 / 50 / 75 / 100%) a deposit crossed, if any, so only real progress is celebrated. |
 | `goalColor(id)` | Each goal's color, picked from its id so it doesn't change when goals are added. |
 | `format.ts` | Money, signed money with a true minus ("−$9.60"), percents, and dates parsed as local calendar days so nothing shifts by a timezone. |

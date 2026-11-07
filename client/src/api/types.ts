@@ -20,7 +20,7 @@ export type RiskLevel = 1 | 2 | 3 | 4 | 5
 export type PortfolioStatus = 'open' | 'closed'
 /** `scheduled`: created, first deposit not yet made. `paused`: monthly deposits stopped. */
 export type GoalStatus = 'active' | 'scheduled' | 'paused'
-export type ActivityType = 'deposit' | 'dividend' | 'fee'
+export type ActivityType = 'deposit' | 'dividend' | 'fee' | 'withdrawal'
 export type ActivitySortField = 'date' | 'amount'
 
 /** GET /summary */
@@ -73,6 +73,8 @@ export interface Goal {
   status: GoalStatus
   /** ISO date, or null while paused. */
   nextDepositDate: string | null
+  /** Monthly deposits made on time, in a row. Pausing holds it rather than resetting it. */
+  streak: number
   createdAt: string
 }
 
@@ -111,6 +113,12 @@ export interface GoalUpdate {
   target?: number | null
   monthlyAmount?: number | null
   paused?: boolean
+}
+
+/** POST /goals/:id/close: the goal's investments are sold and this amount withdrawn. */
+export interface CloseResult {
+  amount: number
+  activity: Activity
 }
 
 /** POST /goals/:id/deposits */

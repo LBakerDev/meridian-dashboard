@@ -6,8 +6,9 @@ import { useState } from 'react'
 import { useUpdateGoal } from '../../api/queries.ts'
 import type { Goal } from '../../api/types.ts'
 import { formatMoney, formatMonthYear } from '../../domain/format.ts'
-import { project } from '../../domain/goals.ts'
+import { hasStarted, project } from '../../domain/goals.ts'
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
+import { ACCOUNT } from '../../domain/account.ts'
 import classes from './drawers.module.css'
 import { MAX_NAME_LENGTH } from './NewGoalForm.tsx'
 
@@ -25,10 +26,12 @@ interface EditGoalFormProps {
   onDone: () => void
   onCancel: () => void
   onGone: () => void
+  /** Delete (nothing in it yet) or close and withdraw (funded). */
+  onRemove: () => void
 }
 
 /** Rename, change the target or monthly amount, or pause deposits, seeing the effect before saving. */
-export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel, onGone }: EditGoalFormProps) {
+export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel, onGone, onRemove }: EditGoalFormProps) {
   const updateGoal = useUpdateGoal()
   const [problem, setProblem] = useState<FormProblem | null>(null)
 
@@ -124,6 +127,18 @@ export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel
             Save changes
           </Button>
         </Group>
+
+        {/* Kept apart from everyday actions, below a divider. */}
+        <div className={classes.danger}>
+          <Button variant="subtle" color="red" px={0} onClick={onRemove} disabled={updateGoal.isPending}>
+            {hasStarted(goal) ? 'Close goal and withdraw' : 'Delete goal'}
+          </Button>
+          <Text size="xs" c="dimmed">
+            {hasStarted(goal)
+              ? `Sells its investments and sends the money to ${ACCOUNT.bank}.`
+              : 'Nothing has been deposited yet.'}
+          </Text>
+        </div>
       </Stack>
     </form>
   )

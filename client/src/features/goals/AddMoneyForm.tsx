@@ -6,9 +6,10 @@ import { useState } from 'react'
 import { useAddMoney } from '../../api/queries.ts'
 import type { Goal } from '../../api/types.ts'
 import { formatMoney, formatMonthYear } from '../../domain/format.ts'
-import { project } from '../../domain/goals.ts'
+import { crossedMilestone, milestoneMessage, progress, project } from '../../domain/goals.ts'
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
 import classes from './drawers.module.css'
+import type { Arrival } from './GoalOverview.tsx'
 
 export const MIN_DEPOSIT = 10
 export const MAX_DEPOSIT = 10_000
@@ -17,7 +18,8 @@ const QUICK_AMOUNTS = [50, 100, 250, 500]
 interface AddMoneyFormProps {
   goal: Goal
   assumedReturn: number | undefined
-  onDone: () => void
+  /** Called with where the bar should grow from, and any milestone the deposit crossed. */
+  onDone: (arrival: Arrival) => void
   onCancel: () => void
   onGone: () => void
 }
@@ -52,9 +54,22 @@ export function AddMoneyForm({ goal, assumedReturn, onDone, onCancel, onGone }: 
     if (addMoney.isPending) return
     setProblem(null)
     try {
-      await addMoney.mutateAsync({ goalId: goal.id, amount: value as number })
-      notifications.show({ title: 'Money added', message: `${formatMoney(value as number)} added to ${goal.name}` })
-      onDone()
+      const before = progress(goal)
+      const { goal: updated } = await addMoney.mutateAsync({ goalId: goal.id, amount: value as number })
+      // Celebrate only a milestone this deposit actually crossed: the user's own progress.
+      const milestone = crossedMilestone(before, progress(updated))
+      const added = `${formatMoney(value as number)} added`
+      notifications.show(
+        milestone === null
+          ? { title: 'Money added', message: `${added} to ${goal.name}` }
+          : {
+              title: milestoneMessage(milestone, goal.name),
+              message: milestone >= 1 ? `${added}. Raise the target, or start a new goal.` : added,
+              color: 'brand',
+              autoClose: 5000,
+            },
+      )
+      onDone({ from: before, milestone })
     } catch (error) {
       setProblem(
         toFormProblem(error, {

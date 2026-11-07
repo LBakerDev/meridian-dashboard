@@ -21,6 +21,7 @@ const EMPTY_TEXT: Record<ActivityType, string> = {
   deposit: 'No deposits yet.',
   dividend: 'No dividends yet.',
   fee: 'No fees yet.',
+  withdrawal: 'No withdrawals yet.',
 }
 
 export function ActivityTable() {
