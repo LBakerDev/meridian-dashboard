@@ -124,7 +124,8 @@ describe('ActivityFeed', () => {
 
     expect(await screen.findByText('No fees yet.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Show all' }))
-    expect(await screen.findByText('House deposit')).toBeInTheDocument()
+    expect(await screen.findByText('Monthly deposit from Chase ••4821')).toBeInTheDocument()
+    expect(screen.queryByText('No fees yet.')).not.toBeInTheDocument()
   })
 
   it('offers a retry when activity fails to load', async () => {

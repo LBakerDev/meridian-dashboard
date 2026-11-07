@@ -129,3 +129,15 @@
   text-transform: uppercase;
   color: var(--mantine-color-dimmed);
 }
+
+/* A text-style action: no fill on hover (which hugged the text), just an underline. */
+.dangerButton {
+  align-self: flex-start;
+  height: auto;
+  padding-block: rem(2px);
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+    text-underline-offset: rem(3px);
+  }
+}

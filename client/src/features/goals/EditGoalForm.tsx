@@ -110,7 +110,8 @@ export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel
               Enter a target and a monthly amount to see your new date.
             </Text>
           )}
-          {was && (
+          {/* Only worth saying when the date has moved. */}
+          {was && (paused || !willBe || formatMonthYear(was) !== formatMonthYear(willBe)) && (
             <Text size="xs" c="dimmed" mt={4}>
               Was: {formatMonthYear(was)}
             </Text>
@@ -130,7 +131,7 @@ export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel
 
         {/* Kept apart from everyday actions, below a divider. */}
         <div className={classes.danger}>
-          <Button variant="subtle" color="red" px={0} onClick={onRemove} disabled={updateGoal.isPending}>
+          <Button variant="transparent" color="red" px={0} className={classes.dangerButton} onClick={onRemove} disabled={updateGoal.isPending}>
             {hasStarted(goal) ? 'Close goal and withdraw' : 'Delete goal'}
           </Button>
           <Text size="xs" c="dimmed">
