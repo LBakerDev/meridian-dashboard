@@ -31,8 +31,8 @@ describe('App shell and routing', () => {
     const { user } = renderWithProviders(<App />)
 
     await user.click(screen.getByRole('button', { name: 'Account menu for London Baker' }))
-    // The menu becomes visible after its open transition; role queries skip hidden elements, so wait.
-    const dark = await screen.findByRole('radio', { name: 'Dark' })
+    // Each theme option is found by its visible label.
+    const dark = await screen.findByLabelText('Dark')
     expect(screen.getByText('Sample account · demo data')).toBeInTheDocument()
     expect(screen.getByText('Chase ••4821')).toBeInTheDocument()
 
@@ -41,7 +41,7 @@ describe('App shell and routing', () => {
     expect(localStorage.getItem('mantine-color-scheme-value')).toBe('dark')
 
     // System follows the device; the test environment reports a light preference.
-    await user.click(await screen.findByRole('radio', { name: 'System' }))
+    await user.click(screen.getByLabelText('System'))
     expect(localStorage.getItem('mantine-color-scheme-value')).toBe('auto')
     expect(document.documentElement).toHaveAttribute('data-mantine-color-scheme', 'light')
   })
