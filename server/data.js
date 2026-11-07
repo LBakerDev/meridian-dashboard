@@ -80,7 +80,9 @@ const addActivity = (entry) => activity.push({ id: `act_${String(++activitySeq).
 
 goals.forEach((goal) => {
   const months = goal.contributed / goal.monthlyAmount || 0;
-  for (let m = 0; m < months; m++) {
+  // A paused goal's deposits stopped before this month, so its latest is last month's.
+  const start = goal.status === 'paused' ? 1 : 0;
+  for (let m = start; m < start + months; m++) {
     addActivity({
       date: isoDate(firstOfMonth(-m)), // deposits go out on the 1st
       type: 'deposit',
