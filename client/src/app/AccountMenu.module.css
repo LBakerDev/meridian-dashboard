@@ -1,0 +1,23 @@
+.trigger {
+  border-radius: 50%;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.avatar {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: box-shadow 150ms ease;
+}
+
+.trigger:hover .avatar,
+.trigger[aria-expanded='true'] .avatar {
+  box-shadow: 0 0 0 3px var(--mantine-color-default-border);
+}
+
+.who {
+  padding: rem(8px) var(--mantine-spacing-sm) rem(6px);
+}

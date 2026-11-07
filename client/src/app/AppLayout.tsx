@@ -2,10 +2,10 @@ import { AppShell, Container, Group } from '@mantine/core'
 import { Link, Outlet } from 'react-router'
 
 import classes from './AppLayout.module.css'
-import { ColorSchemeToggle } from './ColorSchemeToggle.tsx'
+import { AccountMenu } from './AccountMenu.tsx'
 
-// One page, so the header is the brand and the theme switch. If sections are
-// added, AppShell makes a header nav or sidebar a small change.
+// One page, so the header is the brand and the account menu (which holds the
+// theme). If sections are added, AppShell makes a header nav or sidebar a small change.
 export function AppLayout() {
   return (
     <AppShell header={{ height: 60 }} padding="xl">
@@ -19,7 +19,7 @@ export function AppLayout() {
             <Link to="/" className={classes.brand}>
               Meridian
             </Link>
-            <ColorSchemeToggle />
+            <AccountMenu />
           </Group>
         </Container>
       </AppShell.Header>

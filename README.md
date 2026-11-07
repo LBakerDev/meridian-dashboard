@@ -32,7 +32,7 @@ with realistic, deliberately messy data.
   amount, and see when you'd get there as you type.
 - **Activity.** Every deposit, dividend and fee. Filter, sort and page, with
   the view kept in the URL. Columns never shift.
-- **Dark by default,** with a remembered light mode (warm paper and ink).
+- **Dark by default.** The account menu (the "LB" avatar) switches between Light (warm paper and ink), Dark and System, and remembers the choice.
 
 ## The details that matter
 

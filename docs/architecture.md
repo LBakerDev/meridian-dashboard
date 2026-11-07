@@ -83,7 +83,7 @@ One page, with two drawers on top of it.
 ```mermaid
 flowchart TB
   main["main.tsx<br/>Mantine · Notifications · QueryClient · Router"] --> App
-  App --> Layout["AppLayout<br/>header · theme toggle · skip link"]
+  App --> Layout["AppLayout<br/>header · account menu · skip link"]
   Layout --> Home[HomePage]
   Layout --> NF[NotFoundPage]
 
@@ -131,7 +131,7 @@ flowchart LR
     L["which drawer is open<br/>drawer step · form values<br/>chart range · hovered month"]
   end
   subgraph Storage["localStorage"]
-    LS["light / dark choice"]
+    LS["theme: light, dark or system"]
   end
 ```
 
@@ -248,7 +248,7 @@ flowchart LR
 ```
 client/src/
   main.tsx, App.tsx       providers and routes
-  app/                    layout, header, theme toggle
+  app/                    layout, header, account menu (theme)
   pages/                  HomePage, NotFoundPage
   features/
     overview/             Headline, ValueChart

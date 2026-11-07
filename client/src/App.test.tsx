@@ -27,16 +27,20 @@ describe('App shell and routing', () => {
     expect(await screen.findByRole('dialog', { name: 'New goal' })).toBeInTheDocument()
   })
 
-  it('switches between light and dark mode and remembers the choice', async () => {
+  it('shows the account, and switches between light, dark and system themes', async () => {
     const { user } = renderWithProviders(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }))
+    await user.click(screen.getByRole('button', { name: 'Account menu for London Baker' }))
+    expect(await screen.findByText('Sample account · demo data')).toBeInTheDocument()
+    expect(screen.getByText('Chase ••4821')).toBeInTheDocument()
 
+    await user.click(screen.getByRole('radio', { name: 'Dark' }))
     expect(document.documentElement).toHaveAttribute('data-mantine-color-scheme', 'dark')
     expect(localStorage.getItem('mantine-color-scheme-value')).toBe('dark')
 
-    await user.click(screen.getByRole('button', { name: 'Switch to light mode' }))
-
+    // System follows the device; the test environment reports a light preference.
+    await user.click(screen.getByRole('radio', { name: 'System' }))
+    expect(localStorage.getItem('mantine-color-scheme-value')).toBe('auto')
     expect(document.documentElement).toHaveAttribute('data-mantine-color-scheme', 'light')
   })
 
