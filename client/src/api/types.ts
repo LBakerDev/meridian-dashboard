@@ -85,8 +85,10 @@ export interface Activity {
   description: string
   goalId: string | null
   goalName: string | null
-  /** Negative for fees. */
+  /** Negative for fees and withdrawals. */
   amount: number
+  /** True for scheduled monthly deposits; absent otherwise. */
+  recurring?: boolean
 }
 
 export interface ActivityListParams {

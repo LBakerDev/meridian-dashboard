@@ -21,7 +21,7 @@ to today, so the data never looks stale.
 | `GET /portfolios` | Portfolios: `id`, `name`, `category`, `risk` (1–5), `minMonthly`, `feePct`, `assumedReturnPct`, `status` (`open` / `closed`), `description`. Filter: `?status=` |
 | `GET /goals` | Goals: `id`, `name`, `portfolioId`, `portfolioName`, `risk`, `target`, `monthlyAmount`, `contributed`, `value`, `returnPct`, `status`, `nextDepositDate`, `streak` (on-time monthly deposits in a row; pausing holds it), `createdAt`. Filter: `?status=active\|scheduled\|paused` |
 | `GET /goals/:id` | One goal, or 404 |
-| `GET /activity` | Deposits, dividends, fees and withdrawals: `id`, `date`, `type`, `description`, `goalId`, `goalName`, `amount` (negative for fees). Query: `type`, `goalId`, `sort=date\|amount`, `order=asc\|desc`, `page`, `pageSize` (default 25, max 100) |
+| `GET /activity` | Deposits, dividends, fees and withdrawals: `id`, `date`, `type`, `description`, `goalId`, `goalName`, `amount` (negative for fees and withdrawals), `recurring` (true on scheduled monthly deposits). Query: `type`, `goalId`, `sort=date\|amount`, `order=asc\|desc`, `page`, `pageSize` (default 25, max 100) |
 
 Goal statuses: `scheduled` (created, first deposit not yet made), `active`,
 `paused` (monthly deposits stopped; still invested).

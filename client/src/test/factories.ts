@@ -65,6 +65,7 @@ export function makeActivity(overrides: Partial<Activity> = {}): Activity {
     goalId: 'goal_0001',
     goalName: 'House deposit',
     amount: 500,
+    recurring: true,
     ...overrides,
   }
 }

@@ -38,8 +38,10 @@ with realistic, deliberately messy data.
 - **Delete or close.** A goal with nothing in it can be deleted, with Undo. A
   funded goal is closed instead, after a confirmation that spells out the sale
   and withdrawal.
-- **Activity.** Every deposit, dividend and fee. Filter, sort and page, with
-  the view kept in the URL. Columns never shift.
+- **Activity.** Every deposit, dividend, fee and withdrawal, grouped by day.
+  A month's scheduled deposits share one line ("Monthly deposits · 4 goals ·
+  +$1,200") that opens to show each goal's share. Filter by type or goal, with
+  the filters kept in the URL; "Show more" loads older days.
 - **Dark by default.** The account menu (the "LB" avatar) switches between Light (warm paper and ink), Dark and System, and remembers the choice.
 
 ## The details that matter

@@ -2,7 +2,7 @@ import { Stack } from '@mantine/core'
 import { useDocumentTitle } from '@mantine/hooks'
 import { useState } from 'react'
 
-import { ActivityTable } from '../features/activity/ActivityTable.tsx'
+import { ActivityFeed } from '../features/activity/ActivityFeed.tsx'
 import { GoalDrawer } from '../features/goals/GoalDrawer.tsx'
 import { GoalList } from '../features/goals/GoalList.tsx'
 import { NewGoalDrawer } from '../features/goals/NewGoalDrawer.tsx'
@@ -18,7 +18,7 @@ export function HomePage() {
     <Stack gap="lg">
       <Headline />
       <GoalList onOpenGoal={setOpenGoalId} onNewGoal={() => setCreating(true)} />
-      <ActivityTable />
+      <ActivityFeed />
       <GoalDrawer goalId={openGoalId} onClose={() => setOpenGoalId(null)} />
       <NewGoalDrawer opened={creating} onClose={() => setCreating(false)} />
     </Stack>

@@ -90,7 +90,7 @@ flowchart TB
   Home --> Headline
   Headline --> Chart[ValueChart]
   Home --> GoalList
-  Home --> Activity[ActivityTable]
+  Home --> Activity[ActivityFeed]
   Home --> GD[GoalDrawer]
   Home --> NGD[NewGoalDrawer]
 
@@ -107,7 +107,7 @@ Which data each part reads:
 | --- | --- |
 | `Headline` | `useOverview`, `useHistory` |
 | `GoalList` | `useGoals`, `useOverview`, `usePortfolios` (for projections) |
-| `ActivityTable` | `useActivity(filter, sort, page)` |
+| `ActivityFeed` | `useActivityFeed(type, goal)` (loads more on request), `useGoals` (goal filter) |
 | `GoalDrawer` | `useGoals`, `usePortfolios`; `GoalOverview` adds `useActivity(goalId)` |
 | `PortfolioPicker` | `usePortfolios` |
 | Forms | `useCreateGoal`, `useAddMoney`, `useUpdateGoal` |
@@ -222,13 +222,13 @@ Color is kept for meaning: green and red are gain and loss, and amber is
 flowchart LR
   subgraph Unit["Plain unit tests"]
     D["domain/*<br/>projections · progress · formatting"]
-    C["api/client · activityParams<br/>formErrors · useCountUp"]
+    C["api/client · activityParams · groupActivity<br/>formErrors · useCountUp"]
   end
   subgraph Hooks["Hook tests"]
     H["api/queries<br/>requests · what each write refreshes"]
   end
   subgraph UI["Component tests"]
-    U["Headline · ValueChart · GoalList<br/>ActivityTable · both drawers · App"]
+    U["Headline · ValueChart · GoalList<br/>ActivityFeed · both drawers · App"]
   end
   Fake["test/fakeApi.ts<br/>fakes every endpoint"] --> UI
   Fake --> Hooks
@@ -254,7 +254,8 @@ client/src/
     overview/             Headline, ValueChart
     goals/                GoalList, GoalDrawer (+ overview, add money, edit),
                           NewGoalDrawer (+ portfolio picker, form)
-    activity/             ActivityTable, activityParams (URL state)
+    activity/             ActivityFeed, groupActivity (days, monthly lines),
+                          activityParams (URL state)
     shared/               RiskDots, formErrors
   api/                    client, endpoints, queries, types
   domain/                 goals.ts (rules), format.ts

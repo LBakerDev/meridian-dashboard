@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatMoney, formatMonthYear, formatPercent, formatShortDate, formatSignedMoney, parseDate } from './format.ts'
+import { formatDate, formatDay, formatMoney, formatMonthYear, formatPercent, formatShortDate, formatSignedMoney, parseDate } from './format.ts'
 
 describe('formatMoney', () => {
   it('formats whole dollars with separators', () => {
@@ -46,6 +46,12 @@ describe('goal formatting', () => {
     const today = new Date(2026, 10, 5)
     expect(formatShortDate('2026-12-01', today)).toBe('Dec 1')
     expect(formatShortDate('2027-01-01', today)).toBe('Jan 1, 2027')
+  })
+
+  it('heads each day of activity with its weekday, adding the year only when it differs', () => {
+    const today = new Date(2026, 10, 5)
+    expect(formatDay('2026-11-01', today)).toBe('Sun, Nov 1')
+    expect(formatDay('2025-11-15', today)).toBe('Sat, Nov 15, 2025')
   })
 
   it('signs amounts with a true minus, showing cents only when there are some', () => {

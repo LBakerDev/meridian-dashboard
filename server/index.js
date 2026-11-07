@@ -22,7 +22,7 @@
  *   DELETE /api/goals/:id               only a goal with nothing in it (409 otherwise)
  *   POST  /api/goals/:id/restore        undo a delete
  *   POST  /api/goals/:id/close          sell and withdraw a funded goal (409 if it's empty)
- *   GET   /api/activity                 ?type=deposit|dividend|fee &goalId= &sort=date|amount &order=asc|desc &page= &pageSize=
+ *   GET   /api/activity                 ?type=deposit|dividend|fee|withdrawal &goalId= &sort=date|amount &order=asc|desc &page= &pageSize=
  *
  * Lists return { data, meta: { page, pageSize, total, totalPages } }.
  * Errors return { error, fields? } with 400 (validation), 404 (not found) or 409 (conflict).

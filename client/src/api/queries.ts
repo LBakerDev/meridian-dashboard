@@ -1,8 +1,8 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { isApiError } from './client.ts'
 import { api } from './endpoints.ts'
-import type { ActivityListParams, GoalUpdate, NewGoalRequest } from './types.ts'
+import type { ActivityListParams, ActivityType, GoalUpdate, NewGoalRequest } from './types.ts'
 
 /**
  * Cache keys, organized so one invalidation refreshes everything related:
@@ -20,6 +20,7 @@ export const queryKeys = {
   activity: {
     all: ['activity'] as const,
     list: (params: ActivityListParams) => ['activity', 'list', params] as const,
+    feed: (params: ActivityFeedParams) => ['activity', 'feed', params] as const,
   },
 }
 
@@ -60,6 +61,29 @@ export function useActivity(params: ActivityListParams) {
   return useQuery({
     queryKey: queryKeys.activity.list(params),
     queryFn: ({ signal }) => api.listActivity(params, signal),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export interface ActivityFeedParams {
+  type?: ActivityType
+  goalId?: string
+}
+
+/** How many entries each "Show more" loads. */
+export const FEED_PAGE_SIZE = 40
+
+/**
+ * The activity feed: newest first, loaded a page at a time as you ask for more.
+ * A new filter keeps the current feed on screen until its results arrive.
+ */
+export function useActivityFeed(params: ActivityFeedParams) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.activity.feed(params),
+    queryFn: ({ signal, pageParam }) =>
+      api.listActivity({ ...params, sort: 'date', order: 'desc', page: pageParam, pageSize: FEED_PAGE_SIZE }, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.meta.page < last.meta.totalPages ? last.meta.page + 1 : undefined),
     placeholderData: keepPreviousData,
   })
 }

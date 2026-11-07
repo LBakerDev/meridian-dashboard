@@ -89,6 +89,7 @@ goals.forEach((goal) => {
       date: isoDate(firstOfMonth(-m)), // deposits go out on the 1st
       type: 'deposit',
       description: 'Monthly deposit from Chase ••4821',
+      recurring: true, // a scheduled monthly deposit (the front end groups these by day)
       goalId: goal.id,
       goalName: goal.name,
       amount: goal.monthlyAmount,

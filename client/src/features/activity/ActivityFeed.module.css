@@ -1,0 +1,189 @@
+.header {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.feed[data-stale] {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}
+
+.day + .day {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.dayHeading {
+  margin: 0;
+  padding: rem(14px) var(--mantine-spacing-lg) rem(4px);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0 rem(8px) rem(6px);
+}
+
+/* Every line reserves the chevron's column, so amounts end at the same edge
+   whether or not the line opens. */
+.row {
+  display: grid;
+  grid-template-columns: rem(32px) minmax(0, 1fr) auto rem(14px);
+  align-items: center;
+  gap: rem(12px);
+  width: 100%;
+  padding: rem(8px) rem(12px);
+  border-radius: var(--mantine-radius-md);
+  color: inherit;
+}
+
+.row[data-toggle]:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.row[data-toggle]:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: rem(30px);
+  height: rem(30px);
+  border-radius: 50%;
+  font-size: rem(13px);
+  font-weight: 600;
+  background-color: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+}
+
+.icon[data-type='dividend'] {
+  color: var(--meridian-gain);
+  background-color: color-mix(in srgb, var(--meridian-gain) 14%, transparent);
+}
+
+.icon[data-type='fee'] {
+  color: var(--mantine-color-dimmed);
+}
+
+.icon[data-type='withdrawal'] {
+  color: var(--mantine-primary-color-light-color);
+  background-color: var(--mantine-primary-color-light);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title,
+.sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.title {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+
+.sub {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.amount {
+  font-size: var(--mantine-font-size-sm);
+  font-family: var(--meridian-figure-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.amount[data-type='dividend'] {
+  color: var(--meridian-gain);
+}
+
+.amount[data-type='fee'] {
+  color: var(--mantine-color-dimmed);
+}
+
+.chevron {
+  color: var(--mantine-color-dimmed);
+  font-size: rem(18px);
+  line-height: 1;
+  transition: transform 150ms ease;
+}
+
+.row[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+/* Each goal's share, indented under the icon column; amounts end where the line's total does. */
+.children {
+  list-style: none;
+  margin: 0 0 rem(6px);
+  padding: 0 calc(rem(12px) + rem(14px) + rem(12px)) 0 calc(rem(12px) + rem(32px) + rem(12px));
+}
+
+.children li {
+  display: grid;
+  grid-template-columns: rem(8px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: rem(10px);
+  padding: rem(6px) 0;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.children .amount {
+  color: var(--mantine-color-text);
+}
+
+.goalDot {
+  flex-shrink: 0;
+  width: rem(8px);
+  height: rem(8px);
+  border-radius: 50%;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: rem(10px);
+  width: 100%;
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  padding: rem(12px) var(--mantine-spacing-lg) rem(16px);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.empty {
+  text-align: center;
+  padding: rem(32px) rem(16px);
+}

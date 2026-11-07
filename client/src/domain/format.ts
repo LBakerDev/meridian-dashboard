@@ -59,6 +59,17 @@ export function formatSignedMoney(amount: number): string {
   return amount < 0 ? `−${text}` : amount > 0 ? `+${text}` : text
 }
 
+/** "Sun, Nov 1" (current year) or "Sat, Nov 15, 2025" (any other year). */
+export function formatDay(isoDate: string, today: Date = new Date()): string {
+  const date = parseDate(isoDate)
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    ...(date.getFullYear() === today.getFullYear() ? {} : { year: 'numeric' }),
+  })
+}
+
 /** "Sep 12, 2022" */
 export function formatDate(isoDate: string): string {
   return parseDate(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

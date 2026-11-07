@@ -33,7 +33,8 @@ queryKeys.overview                 // ['overview']
 queryKeys.history                  // ['history']
 queryKeys.portfolios               // ['portfolios']
 queryKeys.goals.list               // ['goals', 'list']
-queryKeys.activity.list(params)    // ['activity', 'list', { type: 'dividend', page: 2, ... }]
+queryKeys.activity.list(params)    // ['activity', 'list', { goalId, pageSize: 5 }]  (a goal's recent activity)
+queryKeys.activity.feed(params)    // ['activity', 'feed', { type: 'dividend', goalId }]  (the feed, all pages loaded so far)
 ```
 
 Components asking for the same key share one request. The goals list feeds the
@@ -50,10 +51,13 @@ blank the page; if the chart fails, the totals still show.
 `staleTime: 30_000` (in `lib/queryClient.ts`); portfolios, which rarely change,
 for 5 minutes. Opening a drawer shows cached data immediately.
 
-### 4. Paging and filtering don't flash a skeleton
+### 4. The feed loads more without starting over, and filters don't flash a skeleton
 
-`useActivity` uses `placeholderData: keepPreviousData`. Changing the filter,
-sort or page keeps the current rows on screen (dimmed) while the next ones load.
+`useActivityFeed` is an infinite query: "Show more" fetches the next page and
+appends it. The feed groups entries by day, so the oldest day on screen is held
+back until the next page arrives, in case it continues there (a monthly total
+never shows a partial sum). With `placeholderData: keepPreviousData`, changing a
+filter keeps the current feed on screen (dimmed) while the new one loads.
 
 ### 5. Out-of-date responses are ignored
 
