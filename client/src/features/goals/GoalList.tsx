@@ -1,13 +1,16 @@
-import { Alert, Badge, Button, Card, Group, Skeleton, Text, Title, UnstyledButton } from '@mantine/core'
-import { useMemo } from 'react'
+import { Alert, Badge, Button, Card, Group, Skeleton, Text, Title, UnstyledButton, VisuallyHidden } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
+import { memo, useMemo } from 'react'
 
-import { useGoals, useOverview, usePortfolios } from '../../api/queries.ts'
+import { useGoals, useOverview, usePortfolios, useReorderGoals } from '../../api/queries.ts'
 import type { Goal } from '../../api/types.ts'
 import { formatMoney, formatMonthYear, formatPercent, formatShortDate } from '../../domain/format.ts'
 import { goalColor, hasStarted, progress, projectGoal } from '../../domain/goals.ts'
 import { RiskDots } from '../shared/RiskDots.tsx'
 import classes from './GoalList.module.css'
 import { GoalProgress } from './GoalProgress.tsx'
+import { MoveMenu } from './MoveMenu.tsx'
+import { useGoalReorder } from './useGoalReorder.ts'
 
 interface GoalListProps {
   onOpenGoal: (goalId: string) => void
@@ -23,6 +26,19 @@ export function GoalList({ onOpenGoal, onNewGoal }: GoalListProps) {
     () => new Map((portfolios.data ?? []).map((p) => [p.id, p.assumedReturnPct])),
     [portfolios.data],
   )
+
+  // The person's own order: drag, keyboard or the Move menu. Saved optimistically.
+  const byId = useMemo(() => new Map((goals.data ?? []).map((g) => [g.id, g])), [goals.data])
+  const ids = useMemo(() => (goals.data ?? []).map((g) => g.id), [goals.data])
+  const reorderGoals = useReorderGoals()
+  const reorder = useGoalReorder({
+    ids,
+    nameOf: (id) => byId.get(id)?.name ?? 'Goal',
+    onReorder: (next) =>
+      reorderGoals.mutateAsync(next).catch(() =>
+        notifications.show({ color: 'red', title: "Couldn't save the new order", message: 'Your goals are back in their previous order.' }),
+      ),
+  })
 
   return (
     <Card component="section" aria-labelledby="goals-heading" padding={0}>
@@ -66,13 +82,42 @@ export function GoalList({ onOpenGoal, onNewGoal }: GoalListProps) {
           </Text>
         </div>
       ) : (
-        <ul className={classes.list}>
-          {goals.data.map((goal) => (
-            <li key={goal.id}>
-              <GoalRow goal={goal} assumedReturn={assumedReturn.get(goal.portfolioId)} onOpen={() => onOpenGoal(goal.id)} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className={classes.list} ref={reorder.listRef}>
+            {reorder.order.map((id, index) => {
+              const goal = byId.get(id)
+              if (!goal) return null
+              return (
+                <li
+                  key={id}
+                  className={classes.item}
+                  data-lifted={reorder.liftedId === id || undefined}
+                  onPointerDown={reorder.rowPointerDown(index)}
+                >
+                  <button type="button" className={classes.grip} {...reorder.gripProps(id, index)}>
+                    <GripIcon />
+                  </button>
+                  <GoalRow goal={goal} assumedReturn={assumedReturn.get(goal.portfolioId)} onOpenGoal={onOpenGoal} />
+                  {reorder.menuFor === id && (
+                    <MoveMenu
+                      name={goal.name}
+                      index={index}
+                      count={reorder.order.length}
+                      onMove={(to) => reorder.moveTo(id, to)}
+                      onClose={() => reorder.closeMenu(id)}
+                    />
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          <VisuallyHidden id={reorder.helpId}>
+            To reorder, press Space to pick up, the arrow keys to move, and Space to drop. Escape cancels. Or click for a Move menu.
+          </VisuallyHidden>
+          <VisuallyHidden role="status" aria-live="assertive">
+            {reorder.announcement}
+          </VisuallyHidden>
+        </>
       )}
     </Card>
   )
@@ -88,16 +133,36 @@ export function goalStatusText(goal: Goal, assumedReturn: number | undefined): s
   return reachedOn ? `On track for ${formatMonthYear(reachedOn)}` : null
 }
 
-function GoalRow({ goal, assumedReturn, onOpen }: { goal: Goal; assumedReturn: number | undefined; onOpen: () => void }) {
+const GripIcon = () => (
+  <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">
+    <circle cx="2" cy="2" r="1.5" />
+    <circle cx="8" cy="2" r="1.5" />
+    <circle cx="2" cy="8" r="1.5" />
+    <circle cx="8" cy="8" r="1.5" />
+    <circle cx="2" cy="14" r="1.5" />
+    <circle cx="8" cy="14" r="1.5" />
+  </svg>
+)
+
+interface GoalRowProps {
+  goal: Goal
+  assumedReturn: number | undefined
+  onOpenGoal: (goalId: string) => void
+}
+
+/** Memoized: picking up or moving one goal doesn't re-render the others' contents. */
+const GoalRow = memo(function GoalRow({ goal, assumedReturn, onOpenGoal }: GoalRowProps) {
   const share = progress(goal)
   const started = hasStarted(goal)
-  const status = goalStatusText(goal, assumedReturn)
+  // A goal that hasn't started already shows its start date on the right
+  // ("Starts Dec 1"), so the line under its bar says something else.
+  const status = !started && goal.status !== 'paused' ? 'Not started yet' : goalStatusText(goal, assumedReturn)
 
   return (
     <UnstyledButton
       className={classes.row}
       style={{ '--goal': goalColor(goal.id) }}
-      onClick={onOpen}
+      onClick={() => onOpenGoal(goal.id)}
       aria-label={`${goal.name}: ${formatMoney(goal.value)}, ${Math.round(share * 100)}% of ${formatMoney(goal.target)}${status ? `. ${status}` : ''}`}
     >
       <div className={classes.main}>
@@ -137,7 +202,6 @@ function GoalRow({ goal, assumedReturn, onOpen }: { goal: Goal; assumedReturn: n
       </div>
 
       <div className={classes.side}>
-        {goal.status === 'paused' && <Badge color="gray" size="sm">Paused</Badge>}
         {started ? (
           <>
             <div className={classes.value}>{formatMoney(goal.value)}</div>
@@ -156,4 +220,4 @@ function GoalRow({ goal, assumedReturn, onOpen }: { goal: Goal; assumedReturn: n
       </div>
     </UnstyledButton>
   )
-}
+})

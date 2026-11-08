@@ -2,7 +2,7 @@ import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClie
 
 import { isApiError } from './client.ts'
 import { api } from './endpoints.ts'
-import type { ActivityListParams, ActivityType, GoalUpdate, NewGoalRequest } from './types.ts'
+import type { ActivityListParams, ActivityType, Goal, GoalUpdate, NewGoalRequest, Paginated } from './types.ts'
 
 /**
  * Cache keys, organized so one invalidation refreshes everything related:
@@ -189,5 +189,37 @@ export function useCloseGoal() {
     mutationFn: (id: string) => api.closeGoal(id),
     onSuccess: () => refreshAfterGoalRemoval(queryClient),
     onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.goals.all }),
+  })
+}
+
+/**
+ * Save the person's order for their goals. Unlike the other writes this one is
+ * optimistic: the list takes its new order at once (waiting on a round trip
+ * after a drop feels broken), and a failed save puts the old order back.
+ * Saves run one at a time, in order, so two quick moves can't land out of sequence.
+ */
+export function useReorderGoals() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    scope: { id: 'goal-order' },
+    mutationFn: (ids: string[]) => api.reorderGoals(ids),
+    onMutate: async (ids) => {
+      // A refetch landing mid-save would briefly show the old order.
+      await queryClient.cancelQueries({ queryKey: queryKeys.goals.list })
+      const previous = queryClient.getQueryData<Paginated<Goal>>(queryKeys.goals.list)
+      if (previous) {
+        const byId = new Map(previous.data.map((goal) => [goal.id, goal]))
+        queryClient.setQueryData<Paginated<Goal>>(queryKeys.goals.list, {
+          ...previous,
+          data: ids.flatMap((id) => byId.get(id) ?? []),
+        })
+      }
+      return { previous }
+    },
+    onError: (_error, _ids, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKeys.goals.list, context.previous)
+    },
+    // Either way, line up with the server (a 409 means the list itself changed).
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.goals.list }),
   })
 }

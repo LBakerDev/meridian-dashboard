@@ -4,8 +4,108 @@
   list-style: none;
 }
 
-.list > li {
+.item {
+  position: relative;
   border-top: 1px solid var(--mantine-color-default-border);
+  background-color: var(--meridian-card);
+}
+
+/* Drag to reorder. During a drag, rows are moved with transforms only
+   (compositor-friendly, no layout per frame); nothing else animates. */
+.item[data-settling] {
+  transition: transform 180ms ease;
+}
+
+.item[data-dragging] {
+  z-index: 2;
+  box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.35);
+}
+
+.item[data-dragging] .row {
+  cursor: grabbing;
+}
+
+/* Picked up from the keyboard. */
+.item[data-lifted] {
+  box-shadow: inset 3px 0 0 var(--mantine-primary-color-filled);
+}
+
+:global(body[data-reordering]) {
+  cursor: grabbing;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item[data-settling] {
+    transition: none;
+  }
+}
+
+/* The grip: what you drag on touch, Tab to on the keyboard, and click for the Move menu. */
+.grip {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: rem(6px);
+  display: grid;
+  place-items: center;
+  width: rem(24px);
+  height: rem(36px);
+  padding: 0;
+  border: 0;
+  border-radius: rem(6px);
+  background: none;
+  color: var(--mantine-color-dimmed);
+  opacity: 0.45;
+  cursor: grab;
+  touch-action: none;
+  transform: translateY(-50%);
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.item:hover .grip,
+.grip:focus-visible,
+.grip[aria-expanded='true'],
+.item[data-lifted] .grip {
+  opacity: 1;
+}
+
+.grip:hover {
+  background-color: var(--meridian-surface-muted);
+}
+
+.grip:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.moveMenu {
+  position: absolute;
+  z-index: 3;
+  top: rem(12px);
+  left: rem(36px);
+  min-width: rem(168px);
+  margin: 0;
+  padding: rem(4px);
+  list-style: none;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--meridian-card);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.moveMenu li {
+  padding: rem(8px) rem(10px);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.moveMenu li:hover,
+.moveMenu li:focus {
+  outline: none;
+  background-color: var(--meridian-surface-muted);
 }
 
 .row {
@@ -14,7 +114,7 @@
   gap: rem(24px);
   align-items: center;
   width: 100%;
-  padding: rem(16px) var(--mantine-spacing-lg);
+  padding: rem(16px) var(--mantine-spacing-lg) rem(16px) rem(40px);
   transition: background-color 150ms ease;
 }
 

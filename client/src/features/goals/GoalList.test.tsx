@@ -1,9 +1,9 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { makeGoal, makeOverview, makePortfolio } from '../../test/factories.ts'
 import { serveApi } from '../../test/fakeApi.ts'
-import { jsonResponse, routeFetch } from '../../test/http.ts'
+import { jsonResponse, routeFetch, type FetchCall } from '../../test/http.ts'
 import { renderWithProviders } from '../../test/render.tsx'
 import { GoalList } from './GoalList.tsx'
 
@@ -57,16 +57,18 @@ describe('GoalList', () => {
 
     const japanRow = await screen.findByRole('button', { name: /^Japan trip:/ })
     expect(within(japanRow).getByText('Starts Dec 1')).toBeInTheDocument()
-    expect(within(japanRow).getByText('First deposit Dec 1')).toBeInTheDocument()
+    // Said once: the date on the right, not again under the bar.
+    expect(within(japanRow).getByText('Not started yet')).toBeInTheDocument()
+    expect(within(japanRow).queryByText('First deposit Dec 1')).not.toBeInTheDocument()
     expect(within(japanRow).queryByText('0.0%')).not.toBeInTheDocument()
   })
 
-  it('marks paused goals', async () => {
+  it('marks paused goals once, under the bar, and still shows their value', async () => {
     renderList()
 
     const pausedRow = await screen.findByRole('button', { name: /^Retirement top-up:/ })
-    expect(within(pausedRow).getByText('Paused')).toBeInTheDocument()
     expect(within(pausedRow).getByText('Deposits paused')).toBeInTheDocument()
+    expect(within(pausedRow).queryByText('Paused')).not.toBeInTheDocument()
   })
 
   it('shows the monthly total and next deposit in the header', async () => {
@@ -103,5 +105,84 @@ describe('GoalList', () => {
     expect(await screen.findByText("Couldn't load your goals")).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByRole('button', { name: /^House deposit:/ })).toBeInTheDocument()
+  })
+})
+
+describe('GoalList · reorder', () => {
+  /** Serves the list and saves a new order the way the server does (in place). */
+  function renderReorderable(onWrite?: (call: FetchCall) => Response | undefined) {
+    const goals = [house, climate, retirement, japan]
+    const writes: FetchCall[] = []
+    serveApi({ goals, portfolios, overview: makeOverview() }, (call) => {
+      writes.push(call)
+      if (onWrite) return onWrite(call)
+      if (call.method === 'PUT' && call.path === '/api/goals/order') {
+        const byId = new Map(goals.map((g) => [g.id, g]))
+        const ids = (call.body as { ids: string[] }).ids
+        goals.splice(0, goals.length, ...ids.flatMap((id) => byId.get(id) ?? []))
+        return jsonResponse(200, { data: goals })
+      }
+      return undefined
+    })
+    const view = renderWithProviders(<GoalList onOpenGoal={vi.fn()} onNewGoal={vi.fn()} />)
+    return { ...view, writes }
+  }
+
+  /** Goal names in the order they're shown. */
+  const order = () => screen.getAllByRole('button', { name: /^Reorder / }).map((grip) => grip.getAttribute('aria-label')?.replace('Reorder ', ''))
+  const original = ['House deposit', 'Climate bet', 'Retirement top-up', 'Japan trip']
+
+  it('moves a goal with the keyboard, saving only when it is dropped', async () => {
+    const { user, writes } = renderReorderable()
+    const grip = await screen.findByRole('button', { name: 'Reorder Climate bet' })
+
+    grip.focus()
+    await user.keyboard(' ')
+    expect(screen.getByText(/Picked up Climate bet, position 2 of 4/)).toBeInTheDocument()
+
+    await user.keyboard('{ArrowUp}')
+    expect(order()).toEqual(['Climate bet', 'House deposit', 'Retirement top-up', 'Japan trip'])
+    expect(writes).toHaveLength(0)
+
+    await user.keyboard(' ')
+    await waitFor(() => expect(writes).toHaveLength(1))
+    expect(writes[0]).toMatchObject({ method: 'PUT', path: '/api/goals/order', body: { ids: ['goal_0004', 'goal_0001', 'goal_0005', 'goal_0006'] } })
+    expect(order()).toEqual(['Climate bet', 'House deposit', 'Retirement top-up', 'Japan trip'])
+    expect(screen.getByRole('button', { name: 'Reorder Climate bet' })).toHaveFocus()
+  })
+
+  it('puts a picked-up goal back on Escape, and saves nothing', async () => {
+    const { user, writes } = renderReorderable()
+    ;(await screen.findByRole('button', { name: 'Reorder House deposit' })).focus()
+
+    await user.keyboard(' ')
+    await user.keyboard('{ArrowDown}{ArrowDown}')
+    await user.keyboard('{Escape}')
+
+    expect(order()).toEqual(original)
+    expect(writes).toHaveLength(0)
+  })
+
+  it('offers a Move menu, so reordering never needs a drag', async () => {
+    const { user, writes } = renderReorderable()
+    await user.click(await screen.findByRole('button', { name: 'Reorder House deposit' }))
+
+    const menu = screen.getByRole('menu', { name: 'Move House deposit' })
+    expect(within(menu).queryByRole('menuitem', { name: 'Move up' })).not.toBeInTheDocument() // already first
+    await user.click(within(menu).getByRole('menuitem', { name: 'Move to bottom' }))
+
+    await waitFor(() => expect(writes).toHaveLength(1))
+    expect(writes[0].body).toEqual({ ids: ['goal_0004', 'goal_0005', 'goal_0006', 'goal_0001'] })
+    expect(order().at(-1)).toBe('House deposit')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('puts the old order back, and says so, if the save fails', async () => {
+    const { user } = renderReorderable((call) => (call.method === 'PUT' ? jsonResponse(500, { error: 'Internal server error.' }) : undefined))
+    await user.click(await screen.findByRole('button', { name: 'Reorder Japan trip' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Move to top' }))
+
+    expect(await screen.findByText("Couldn't save the new order")).toBeInTheDocument()
+    await waitFor(() => expect(order()).toEqual(original))
   })
 })

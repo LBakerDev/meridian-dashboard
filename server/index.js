@@ -19,6 +19,7 @@
  *   POST  /api/goals                    { portfolioId, name, target, monthlyAmount, acknowledged }
  *   PATCH /api/goals/:id                { name?, target?, monthlyAmount?, paused? }
  *   POST  /api/goals/:id/deposits       { amount }
+ *   PUT   /api/goals/order              { ids } in the person's chosen order (409 if they don't match)
  *   DELETE /api/goals/:id               only a goal with nothing in it (409 otherwise)
  *   POST  /api/goals/:id/restore        undo a delete
  *   POST  /api/goals/:id/close          sell and withdraw a funded goal (409 if it's empty)
@@ -160,7 +161,8 @@ app.post('/api/goals', (req, res) => {
     nextDepositDate: nextDeposit,
     createdAt: isoDate(new Date()),
   };
-  goals.push(goal);
+  // Newest first: the goal you just made shows at the top, where you're looking.
+  goals.unshift(goal);
   res.status(201).json(goal);
 });
 
@@ -233,6 +235,20 @@ app.post('/api/goals/:id/deposits', (req, res) => {
   };
   activity.push(entry);
   res.status(201).json({ goal, activity: entry });
+});
+
+// The person's own order for their goals (drag to reorder). The ids must be exactly
+// the current goals, so a reorder from a stale page can't drop or duplicate one.
+app.put('/api/goals/order', (req, res) => {
+  const ids = req.body && req.body.ids;
+  const current = new Set(goals.map((g) => g.id));
+  const valid = Array.isArray(ids) && ids.length === current.size && new Set(ids).size === ids.length && ids.every((id) => current.has(id));
+  if (!valid) {
+    return res.status(409).json({ error: 'Your goals changed since this page loaded. Refresh to see the latest.' });
+  }
+  const byId = new Map(goals.map((g) => [g.id, g]));
+  goals.splice(0, goals.length, ...ids.map((id) => byId.get(id)));
+  res.json({ data: goals });
 });
 
 // Deleted goals are kept briefly so "Undo" can put them back where they were.

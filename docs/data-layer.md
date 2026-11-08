@@ -72,9 +72,16 @@ overwrite a newer one.
 | `useUpdateGoal` | overview (monthly total), goals, activity (a rename shows there) |
 | `useAddMoney` | overview, history (the chart), goals, activity |
 | `useDeleteGoal`, `useRestoreGoal`, `useCloseGoal` | overview, history, goals, activity |
+| `useReorderGoals` | goals (after an optimistic update; see below) |
 
 Each write finishes only after those refetches, so a drawer closes onto the new
 numbers, and the count-up animates the total to its new value.
+
+The one exception is reordering goals. Waiting for a round trip after a drop
+feels broken, so `useReorderGoals` updates the cached list straight away
+(`onMutate`), puts the previous list back if the save fails (`onError`), and
+refetches either way (`onSettled`). Saves share a mutation `scope`, so two quick
+moves are sent one after the other, never out of order.
 
 When a write fails because the thing is gone (404) or closed (409), the
 relevant list is refetched instead, so the stale item disappears.

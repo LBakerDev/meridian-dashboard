@@ -34,7 +34,7 @@ Goal statuses: `scheduled` (created, first deposit not yet made), `active`,
 { "portfolioId": "core-growth", "name": "Wedding", "target": 15000, "monthlyAmount": 400, "acknowledged": true }
 ```
 
-- **201:** the new goal, `scheduled`, with `value: 0` and `returnPct: 0` (zeros, not nulls).
+- **201:** the new goal, `scheduled`, with `value: 0` and `returnPct: 0` (zeros, not nulls). It's added to the top of `GET /goals`.
 - **400** fields:
   - `name`: required, under 40 characters
   - `target`: at least $100
@@ -59,6 +59,16 @@ Any of `name`, `target`, `monthlyAmount`, `paused`.
 - **201:** `{ goal, activity }`. Updates the goal, the totals, the last history point and the activity.
 - **400** `amount`: at least $10, and at most $10,000 a day across one-off deposits. The message says how much is left today.
 - **404:** unknown goal.
+
+### `PUT /goals/order`
+
+```json
+{ "ids": ["goal_0004", "goal_0001", "goal_0002"] }
+```
+
+The person's own order (drag to reorder). `ids` must be exactly the current
+goals, each once. **200** `{ data }` with the goals in their new order; **409**
+if the list doesn't match (the page is stale: refetch).
 
 ### `DELETE /goals/:id`
 

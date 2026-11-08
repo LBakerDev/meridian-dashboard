@@ -23,6 +23,10 @@ with realistic, deliberately messy data.
 - **Goals.** Each with its portfolio, a 1–5 risk level, its monthly amount, a
   progress bar, and a projection: "On track for Oct 2028". Goals that haven't
   started say when they will; paused goals say so.
+- **Your order.** New goals land at the top. Drag a goal anywhere on its row to
+  move it (a long press on touch), or use its grip: Space and the arrow keys, or
+  a click for a Move menu, so reordering never requires dragging. The new order
+  shows at once and saves in the background; a failed save puts it back.
 - **A goal, up close.** Click one for its numbers and recent activity, then:
   - **Add money:** quick amounts, and the payoff shown before you commit:
     "This moves House deposit from Oct 2028 to Sep 2028."

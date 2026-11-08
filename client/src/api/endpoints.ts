@@ -38,6 +38,9 @@ export const api = {
 
   restoreGoal: (id: string) => request<Goal>(`/goals/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
 
+  /** The person's order for their goals: every goal id, once each. */
+  reorderGoals: (ids: string[]) => request<{ data: Goal[] }>('/goals/order', { method: 'PUT', body: { ids } }),
+
   closeGoal: (id: string) => request<CloseResult>(`/goals/${encodeURIComponent(id)}/close`, { method: 'POST' }),
 
   listActivity: (params: ActivityListParams = {}, signal?: AbortSignal) =>
