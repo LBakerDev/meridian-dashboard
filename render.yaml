@@ -4,7 +4,8 @@ services:
   - type: web
     name: meridian
     runtime: node
-    plan: free
+    # Starter (0.5 CPU, 512 MB): always on, so no cold start for visitors.
+    plan: starter
     # Dev dependencies are needed to build (TypeScript, Vite).
     buildCommand: npm install --include=dev && npm run build
     startCommand: node server/index.js

@@ -92,9 +92,10 @@ blueprint is included (`render.yaml`):
 2. Render runs `npm run build`, then starts `node server/index.js`.
 
 Any host that runs Node works the same way: build with `npm install --include=dev && npm run build`,
-start with `node server/index.js`, and it listens on `PORT`. On Render's free
-plan the service sleeps when idle, so the first visit can take up to a minute,
-and the sample data is shared by all visitors and resets on each restart.
+start with `node server/index.js`, and it listens on `PORT`. The blueprint uses
+Render's Starter plan, which stays on (the free plan sleeps when idle, so a first
+visit can take up to a minute). The sample data is shared by all visitors and
+resets on each restart or deploy.
 
 ### Logs and analytics
 
