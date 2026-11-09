@@ -15,7 +15,11 @@ import '@mantine/notifications/styles.css'
 
 import App from './App.tsx'
 import { queryClient } from './lib/queryClient.ts'
+import { reportErrors } from './lib/telemetry.ts'
 import { cssVariablesResolver, theme } from './theme/theme.ts'
+
+// Uncaught errors go to the server log in the deployed demo, not in local dev.
+if (import.meta.env.PROD) reportErrors()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

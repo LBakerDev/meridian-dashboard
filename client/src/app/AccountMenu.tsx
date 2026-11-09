@@ -2,6 +2,7 @@ import { Avatar, Divider, Popover, SegmentedControl, Stack, Text, UnstyledButton
 
 import { ACCOUNT } from '../domain/account.ts'
 import classes from './AccountMenu.module.css'
+import { track } from '../lib/telemetry.ts'
 
 const SCHEMES: { label: string; value: MantineColorScheme }[] = [
   { label: 'Light', value: 'light' },
@@ -59,7 +60,10 @@ export function AccountMenu() {
             aria-labelledby="theme-label"
             data={SCHEMES}
             value={colorScheme}
-            onChange={(value) => setColorScheme(value as MantineColorScheme)}
+            onChange={(value) => {
+              setColorScheme(value as MantineColorScheme)
+              track(`theme-${value as MantineColorScheme}`)
+            }}
           />
         </Stack>
       </Popover.Dropdown>

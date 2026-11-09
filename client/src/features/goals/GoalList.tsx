@@ -11,6 +11,7 @@ import classes from './GoalList.module.css'
 import { GoalProgress } from './GoalProgress.tsx'
 import { MoveMenu } from './MoveMenu.tsx'
 import { useGoalReorder } from './useGoalReorder.ts'
+import { track } from '../../lib/telemetry.ts'
 
 interface GoalListProps {
   onOpenGoal: (goalId: string) => void
@@ -35,7 +36,7 @@ export function GoalList({ onOpenGoal, onNewGoal }: GoalListProps) {
     ids,
     nameOf: (id) => byId.get(id)?.name ?? 'Goal',
     onReorder: (next) =>
-      reorderGoals.mutateAsync(next).catch(() =>
+      reorderGoals.mutateAsync(next).then(() => track('goals-reordered'), () =>
         notifications.show({ color: 'red', title: "Couldn't save the new order", message: 'Your goals are back in their previous order.' }),
       ),
   })

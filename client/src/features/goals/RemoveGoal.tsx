@@ -9,6 +9,7 @@ import { formatMoney, formatShortDate } from '../../domain/format.ts'
 import { hasStarted } from '../../domain/goals.ts'
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
 import classes from './drawers.module.css'
+import { track } from '../../lib/telemetry.ts'
 
 interface RemoveGoalProps {
   goal: Goal
@@ -45,9 +46,11 @@ export function RemoveGoal({ goal, onDone, onKeep }: RemoveGoalProps) {
     try {
       if (funded) {
         const { amount } = await closeGoal.mutateAsync(goal.id)
+        track('goal-closed')
         notifications.show({ title: `${goal.name} closed`, message: `${formatMoney(amount)} is on its way to ${ACCOUNT.bank}` })
       } else {
         await deleteGoal.mutateAsync(goal.id)
+        track('goal-deleted')
         const id = notifications.show({
           title: `${goal.name} deleted`,
           autoClose: 6000,

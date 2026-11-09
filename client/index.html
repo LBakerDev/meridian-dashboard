@@ -15,6 +15,13 @@
         document.documentElement.setAttribute('data-mantine-color-scheme', scheme)
       } catch (e) {}
     </script>
+    <!-- Analytics: GoatCounter (cookie-free), the same dashboard as the portfolio,
+         with Meridian's pages and events under meridian/…. Not counted on localhost.
+         To stop counting your own visits, open the demo once with #toggle-goatcounter. -->
+    <script>
+      window.goatcounter = { path: function (p) { return 'meridian' + p } }
+    </script>
+    <script data-goatcounter="https://londonbaker.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   </head>
   <body>
     <div id="root"></div>

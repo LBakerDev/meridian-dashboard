@@ -96,6 +96,15 @@ start with `node server/index.js`, and it listens on `PORT`. On Render's free
 plan the service sleeps when idle, so the first visit can take up to a minute,
 and the sample data is shared by all visitors and resets on each restart.
 
+### Logs and analytics
+
+- **Server log** (Render → Logs): one line per API request (`PUT /api/goals/order 200 362ms`),
+  server errors with their stack (`[server-error]`), and uncaught errors from visitors'
+  browsers (`[client-error]`). `LOG_REQUESTS=0` turns the request lines off.
+- **GoatCounter** (cookie-free): page views and a few events (goal created, money added,
+  goals reordered, theme changed) under `meridian/…`. Localhost isn't counted; open the demo
+  once with `#toggle-goatcounter` to stop counting your own browser.
+
 ## How it's built
 
 ```

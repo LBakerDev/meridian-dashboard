@@ -87,6 +87,17 @@ the linked bank. **200** `{ amount, activity }` (a `withdrawal` entry), and the
 totals and last history point drop accordingly. **409** if the goal is empty
 (delete it instead), **404** if unknown.
 
+## Logging
+
+### `POST /client-errors`
+
+```json
+{ "message": "Cannot read properties of undefined", "stack": "…", "url": "/" }
+```
+
+Sent by the app (with `sendBeacon`) when an error isn't caught in the browser, at
+most five per page load. Written to the server log as `[client-error]`. **204.**
+
 ## Sample data
 
 Deliberately a little messy, so the front end has edge cases to handle:

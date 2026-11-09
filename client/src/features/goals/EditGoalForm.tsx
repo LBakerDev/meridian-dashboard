@@ -11,6 +11,7 @@ import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErr
 import { ACCOUNT } from '../../domain/account.ts'
 import classes from './drawers.module.css'
 import { MAX_NAME_LENGTH } from './NewGoalForm.tsx'
+import { track } from '../../lib/telemetry.ts'
 
 interface FormValues {
   name: string
@@ -71,6 +72,7 @@ export function EditGoalForm({ goal, minMonthly, assumedReturn, onDone, onCancel
         monthlyAmount: typeof values.monthlyAmount === 'number' ? values.monthlyAmount : null,
         paused: values.paused,
       })
+      track('goal-edited')
       notifications.show({ title: 'Goal updated', message: values.name.trim() })
       onDone()
     } catch (error) {

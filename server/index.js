@@ -20,6 +20,7 @@
  *   PATCH /api/goals/:id                { name?, target?, monthlyAmount?, paused? }
  *   POST  /api/goals/:id/deposits       { amount }
  *   PUT   /api/goals/order              { ids } in the person's chosen order (409 if they don't match)
+ *   POST  /api/client-errors            { message, stack, url } from the browser, written to the log
  *   DELETE /api/goals/:id               only a goal with nothing in it (409 otherwise)
  *   POST  /api/goals/:id/restore        undo a delete
  *   POST  /api/goals/:id/close          sell and withdraw a funded goal (409 if it's empty)
@@ -45,7 +46,34 @@ let goalSeq = goals.length;
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '20kb' }));
+
+// ---- Logging ----
+// One line per API request (Render shows these under Logs): method, path, status,
+// time taken (including the simulated latency). Health checks are left out: Render
+// sends one every few seconds. Set LOG_REQUESTS=0 to turn it off.
+if (process.env.LOG_REQUESTS !== '0') {
+  app.use('/api', (req, res, next) => {
+    if (req.path === '/health') return next();
+    const start = process.hrtime.bigint();
+    res.on('finish', () => {
+      const ms = Number(process.hrtime.bigint() - start) / 1e6;
+      const line = `${req.method} ${req.originalUrl} ${res.statusCode} ${Math.round(ms)}ms`;
+      (res.statusCode >= 500 ? console.error : console.log)(line);
+    });
+    next();
+  });
+}
+
+// Errors from visitors' browsers (sent by the app with sendBeacon), so a bug on
+// someone else's device shows up in the server log. Trimmed so a report can't flood it.
+app.post('/api/client-errors', (req, res) => {
+  const { message, stack, url } = req.body || {};
+  const clip = (v, n) => String(v ?? '').slice(0, n);
+  console.error(`[client-error] ${clip(message, 300)} (at ${clip(url, 200)})${stack ? `\n${clip(stack, 2000)}` : ''}`);
+  res.status(204).end();
+});
+
 app.use('/api', (_req, _res, next) => (LATENCY_MS > 0 ? setTimeout(next, LATENCY_MS) : next()));
 
 // ---- Helpers ----
@@ -299,6 +327,14 @@ app.post('/api/goals/:id/close', (req, res) => {
 });
 
 app.use('/api', (_req, res) => notFound(res, 'Endpoint'));
+
+// Anything that throws inside a route: logged with its stack, and a plain 500 for the app.
+// (Four arguments is how Express recognises an error handler.)
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, _next) => {
+  console.error(`[server-error] ${req.method} ${req.originalUrl}\n${err.stack || err}`);
+  if (!res.headersSent) res.status(500).json({ error: 'Something went wrong on our side. Try again.' });
+});
 
 // In production (after `npm run build`), serve the built app from the same
 // server, so the whole demo is one service at one URL. In development Vite

@@ -10,6 +10,7 @@ import { crossedMilestone, milestoneMessage, progress, project } from '../../dom
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
 import classes from './drawers.module.css'
 import type { Arrival } from './GoalOverview.tsx'
+import { track } from '../../lib/telemetry.ts'
 
 export const MIN_DEPOSIT = 10
 export const MAX_DEPOSIT = 10_000
@@ -58,6 +59,7 @@ export function AddMoneyForm({ goal, assumedReturn, onDone, onCancel, onGone }: 
       const { goal: updated } = await addMoney.mutateAsync({ goalId: goal.id, amount: value as number })
       // Celebrate only a milestone this deposit actually crossed: the user's own progress.
       const milestone = crossedMilestone(before, progress(updated))
+      track('money-added')
       const added = `${formatMoney(value as number)} added`
       notifications.show(
         milestone === null

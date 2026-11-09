@@ -12,6 +12,7 @@ import { project } from '../../domain/goals.ts'
 import { ProblemAlert, toFormProblem, type FormProblem } from '../shared/formErrors.tsx'
 import classes from './drawers.module.css'
 import type { Basics } from './GoalBasics.tsx'
+import { track } from '../../lib/telemetry.ts'
 
 export const MAX_NAME_LENGTH = 40
 export const MAX_MONTHLY = 10_000
@@ -66,6 +67,7 @@ export function NewGoalForm({ basics, portfolio, onCreated, onChangePortfolio, o
         monthlyAmount: asNumber(values.monthlyAmount),
         acknowledged: values.acknowledged,
       })
+      track('goal-created')
       notifications.show({
         title: `${goal.name} created`,
         message: goal.nextDepositDate ? `First deposit ${formatShortDate(goal.nextDepositDate)}` : 'Deposits start next month.',
